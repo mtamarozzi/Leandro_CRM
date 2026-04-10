@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   Users, 
@@ -19,7 +19,9 @@ import {
   ChevronRight,
   Home,
   TrendingUp,
-  PieChart
+  PieChart,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
@@ -53,6 +55,15 @@ import { Lead, Property, Event, LeadStatus } from './types';
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -64,53 +75,54 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-foreground">
+    <div className="min-h-screen text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/Logo.png" 
-              alt="Imóvel CRM Logo" 
-              className="h-12 w-auto object-contain" 
-              referrerPolicy="no-referrer"
-            />
-          </div>
+      <header className="topbar">
+        <div className="logo-wrapper">
+          <img 
+            src="/Logo.png" 
+            alt="Imóvel CRM Logo" 
+            className="h-10 w-auto object-contain dark:invert" 
+            referrerPolicy="no-referrer"
+          />
+        </div>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  activeTab === item.id 
-                    ? 'bg-primary/10 text-primary' 
-                    : 'text-muted-foreground hover:bg-slate-100 hover:text-foreground'
-                }`}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell size={20} />
-            </Button>
-            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-              M
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-1">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
             >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </Button>
+              <item.icon size={18} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <button 
+            className="theme-toggle" 
+            aria-label="Alternar tema"
+            onClick={toggleTheme}
+          >
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+          <Button variant="ghost" size="icon" className="rounded-full text-secondary hover:text-primary">
+            <Bell size={20} />
+          </Button>
+          <div className="avatar">
+            M
           </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </Button>
         </div>
       </header>
 
