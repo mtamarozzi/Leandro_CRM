@@ -84,48 +84,45 @@ export default function App() {
       <header className="topbar">
         <div className="logo-wrapper">
           <div className="logo-mark">LA</div>
-          <div className="flex flex-col">
+          <div>
             <div className="logo-sub">creci 300771-F</div>
             <div className="logo-text">LEANDRO ALONSO</div>
           </div>
         </div>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="nav hidden lg:flex">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
             >
-              <item.icon size={18} />
-              <span>{item.label}</span>
+              <item.icon size={16} strokeWidth={2} />
+              {item.label}
             </button>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="topbar-actions">
           <button 
-            className="theme-toggle" 
+            className="icon-btn theme-toggle" 
             aria-label="Alternar tema"
             onClick={toggleTheme}
           >
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
-          <Button variant="ghost" size="icon" className="rounded-full text-secondary hover:text-primary">
-            <Bell size={20} />
-          </Button>
-          <div className="avatar">
-            M
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="md:hidden"
+          <button className="icon-btn" aria-label="Notificações">
+            <Bell size={18} />
+          </button>
+          <div className="avatar">M</div>
+          <button 
+            className="icon-btn lg:hidden flex"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Menu"
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </Button>
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </header>
 
