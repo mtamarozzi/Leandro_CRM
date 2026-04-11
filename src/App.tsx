@@ -83,12 +83,11 @@ export default function App() {
       {/* Header */}
       <header className="topbar">
         <div className="logo-wrapper">
-          <img 
-            src="/Logo.png" 
-            alt="Imóvel CRM Logo" 
-            className="h-10 w-auto object-contain dark:invert" 
-            referrerPolicy="no-referrer"
-          />
+          <div className="logo-mark">LA</div>
+          <div className="flex flex-col">
+            <div className="logo-sub">creci 300771-F</div>
+            <div className="logo-text">LEANDRO ALONSO</div>
+          </div>
         </div>
 
         {/* Desktop Nav */}
@@ -573,7 +572,7 @@ function ImportView() {
 }
 
 function FunnelView() {
-  const columns: LeadStatus[] = ['Novo', 'Em Contato', 'Visita Agendada', 'Proposta', 'Fechado'];
+  const columns: LeadStatus[] = ['Novo', 'Em Contato', 'Visita Agendada', 'Proposta', 'Perdido'];
   
   const getLeadsByStatus = (status: LeadStatus) => mockLeads.filter(l => l.status === status);
 
@@ -583,7 +582,8 @@ function FunnelView() {
       'Em Contato': 'contato',
       'Visita Agendada': 'visita',
       'Proposta': 'proposta',
-      'Fechado': 'fechado'
+      'Perdido': 'perdido',
+      'Fechado': 'perdido'
     };
     return map[status] || 'novo';
   };
@@ -595,7 +595,7 @@ function FunnelView() {
         <p className="text-muted-foreground">Arraste e solte os leads entre as etapas do funil</p>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 min-h-[600px]">
+      <div className="kanban">
         {columns.map((column) => (
           <div key={column} className="kanban-column" data-stage={statusToSlug(column)}>
             <div className="kanban-column__header">
@@ -605,24 +605,13 @@ function FunnelView() {
             
             <div className="flex-1 p-3 space-y-3 bg-foreground/5 relative z-10 rounded-b-[var(--radius-lg)]">
               {getLeadsByStatus(column).map((lead) => (
-                <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_4px_16px_rgba(0,180,204,0.1)] transition-all cursor-grab active:cursor-grabbing !p-3" data-status={statusToSlug(lead.status)}>
-                  <CardContent className="p-0 space-y-3">
-                    <div>
-                      <h4 className="font-display font-bold text-sm">{lead.name}</h4>
-                      <div className="flex flex-col gap-1 mt-2 text-[11px] text-muted-foreground">
-                        <span className="flex items-center gap-1"><Phone size={10} className="text-primary/70" /> {lead.phone}</span>
-                        <span className="flex items-center gap-1"><Mail size={10} className="text-primary/70" /> {lead.email}</span>
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-border/50">
-                      <p className="text-[11px] font-semibold text-foreground">{lead.interest}</p>
-                      <p className="text-[10px] text-muted-foreground">{lead.valueRange}</p>
-                    </div>
-                    <BtnWhatsapp className="h-8 py-0 text-[10px] w-full">
-                      <MessageSquare className="mr-1 h-3 w-3" /> WhatsApp
-                    </BtnWhatsapp>
-                  </CardContent>
-                </GlassCard>
+                <div key={lead.id} className="mini-card cursor-grab active:cursor-grabbing hover:shadow-md transition-all">
+                  <strong>{lead.name}</strong>
+                  <div className="info flex items-center gap-1">
+                    <Phone size={10} /> {lead.phone}
+                  </div>
+                  <div className="price">{lead.interest} · {lead.valueRange}</div>
+                </div>
               ))}
               {getLeadsByStatus(column).length === 0 && (
                 <div className="h-20 flex items-center justify-center border-2 border-dashed border-border/50 rounded-xl text-xs text-muted-foreground">

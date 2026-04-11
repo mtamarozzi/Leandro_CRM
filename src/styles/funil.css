@@ -1,5 +1,10 @@
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
 .kanban-column {
-  min-width: 280px;
   border-radius: var(--radius-lg);
   background: var(--surface);
   backdrop-filter: blur(20px);
@@ -35,17 +40,17 @@
 .kanban-column[data-stage="contato"]  { --col-color: var(--status-contato);  }
 .kanban-column[data-stage="visita"]   { --col-color: var(--status-visita);   }
 .kanban-column[data-stage="proposta"] { --col-color: var(--status-proposta); }
-.kanban-column[data-stage="fechado"]  { --col-color: var(--status-ganho);  } /* changed from perdido to fechado/ganho */
+.kanban-column[data-stage="perdido"]  { --col-color: var(--status-perdido);  }
 
 .col-count {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
   border: 1px solid var(--col-color);
   color: var(--col-color);
-  padding: 0.15rem 0.6rem;
-  border-radius: var(--radius-pill);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  box-shadow: 0 0 8px var(--col-color);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 0 10px var(--col-color);
 }
 
 .funnel-meter {
@@ -67,3 +72,23 @@
 }
 
 .seg:hover { filter: brightness(1.15); }
+
+.mini-card {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--col-color);
+  font-size: 11px;
+  text-align: left;
+}
+.mini-card strong {
+  display: block;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.mini-card .info { color: var(--text-muted); margin: 2px 0; }
+.mini-card .price { color: var(--teal-900); font-weight: 600; margin-top: 4px; }
+[data-theme="dark"] .mini-card .price { color: var(--cyan-300); }
