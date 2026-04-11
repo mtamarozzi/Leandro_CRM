@@ -177,3 +177,49 @@ h1, h2, h3, h4, h5, h6, .font-display {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(0, 180, 204, 0.4);
 }
+
+/* ============================================
+   POLIMENTO & ACESSIBILIDADE
+============================================ */
+
+/* Animações de Entrada (Stagger) */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stagger > * { 
+  animation: fadeInUp 0.5s ease both; 
+}
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+.stagger > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger > *:nth-child(8) { animation-delay: 0.40s; }
+.stagger > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger > *:nth-child(10) { animation-delay: 0.50s; }
+
+/* Foco Acessível (Teclado) */
+:focus-visible {
+  outline: 2px solid var(--cyan-300);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--cyan-300);
+  outline-offset: 2px;
+}
+
+/* Acessibilidade de Movimento */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

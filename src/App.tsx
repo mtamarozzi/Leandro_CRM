@@ -218,7 +218,7 @@ function DashboardView() {
         <p className="text-muted-foreground">Visão geral do seu negócio - abril de 2026</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger">
         <GlassCard className="kpi-card kpi-card--primary border-none">
           <div className="flex flex-row items-center justify-between pb-2">
             <div className="kpi-label font-medium">Total de Leads</div>
@@ -409,7 +409,7 @@ function LeadsView() {
         </Select>
       </div>
 
-      <div className="leads-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="leads-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger">
         {filteredLeads.map((lead) => (
           <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(0,180,204,0.12)] transition-all duration-300" data-status={statusToSlug(lead.status)}>
             <CardHeader className="pb-2 px-0 pt-0">
@@ -477,7 +477,7 @@ function ImportView() {
         <p className="text-muted-foreground">Adicione vários leads de uma vez</p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-2 stagger">
         <GlassCard className="border-none">
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2">
@@ -535,7 +535,7 @@ function ImportView() {
           <CardTitle className="font-display">Como usar</CardTitle>
         </CardHeader>
         <CardContent>
-          <ol className="how-to">
+          <ol className="how-to stagger">
             <li className="how-to__step">
               <span className="how-to__num">1</span>
               <div>
@@ -602,7 +602,7 @@ function FunnelView() {
         <p className="text-muted-foreground">Arraste e solte os leads entre as etapas do funil</p>
       </div>
 
-      <div className="kanban">
+      <div className="kanban stagger">
         {columns.map((column) => (
           <div key={column} className="kanban-column" data-stage={statusToSlug(column)}>
             <div className="kanban-column__header">
@@ -684,7 +684,7 @@ function PropertiesView() {
         </BtnPrimary>
       </div>
 
-      <div className="emp-grid">
+      <div className="emp-grid stagger">
         {mockProperties.map((prop, idx) => {
           const mockClass = `emp-${(idx % 3) + 1}`;
           return (
