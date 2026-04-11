@@ -1,0 +1,81 @@
+.kpi-card {
+  position: relative;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: -40%; right: -20%;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(0,223,252,.18), transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+/* variations for the glow */
+.kpi-card--primary::after { background: radial-gradient(circle, rgba(0, 180, 204, 0.20), transparent 70%); }
+.kpi-card--cyan::after    { background: radial-gradient(circle, rgba(0, 223, 252, 0.20), transparent 70%); }
+.kpi-card--teal::after    { background: radial-gradient(circle, rgba(0, 140, 158, 0.20), transparent 70%); }
+.kpi-card--dark::after    { background: radial-gradient(circle, rgba(0, 95, 107, 0.20), transparent 70%); }
+
+.kpi-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--teal-700), var(--teal-500));
+  color: white;
+  display: grid; place-items: center;
+  box-shadow: 0 4px 16px rgba(0, 180, 204, 0.35);
+}
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+  margin: 0.4rem 0;
+}
+
+[data-theme="dark"] .kpi-value {
+  background: linear-gradient(135deg, var(--cyan-300), var(--teal-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.kpi-label { color: var(--text-secondary); font-size: var(--fs-sm); }
+.kpi-foot  { color: var(--text-muted);     font-size: var(--fs-xs); }
+
+/* Bar chart styles */
+.dashboard-bar-chart path {
+  filter: drop-shadow(0px 0px 8px rgba(0, 180, 204, 0.4));
+}
+
+.pie-glow path {
+  filter: drop-shadow(0 0 6px rgba(0, 180, 204, 0.4));
+}
+
+/* Property Mini Card in Dashboard */
+.prop-mini-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--teal-500);
+  margin-bottom: 0.5rem;
+}
+
+.prop-mini-card:nth-child(even) {
+  border-left-color: var(--cyan-300);
+}
+
+.prop-mini-card:nth-child(3n) {
+  border-left-color: var(--teal-700);
+}

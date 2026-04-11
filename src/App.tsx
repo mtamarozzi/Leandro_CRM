@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { GlassCard } from '@/components/ui/glass-card';
 import { 
   Select, 
   SelectContent, 
@@ -209,76 +210,83 @@ function DashboardView() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Total de Leads</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockLeads.length}</div>
-            <p className="text-xs text-muted-foreground">Todos os tempos</p>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Leads do Mês</CardTitle>
-            <Plus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">Novos este mês</p>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0.0%</div>
-            <p className="text-xs text-muted-foreground">0 vendas fechadas</p>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Empreendimentos</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockProperties.length}</div>
-            <p className="text-xs text-muted-foreground">Cadastrados</p>
-          </CardContent>
-        </Card>
+        <GlassCard className="kpi-card kpi-card--primary border-none">
+          <div className="flex flex-row items-center justify-between pb-2">
+            <div className="kpi-label font-medium">Total de Leads</div>
+            <div className="kpi-icon"><Users size={20} /></div>
+          </div>
+          <div className="kpi-value">{mockLeads.length}</div>
+          <div className="kpi-foot flex items-center justify-between">
+            <span>Todos os tempos</span>
+            <span className="text-emerald-500 font-bold ml-1 text-[10px]">↗ +12%</span>
+          </div>
+        </GlassCard>
+
+        <GlassCard className="kpi-card kpi-card--cyan border-none">
+          <div className="flex flex-row items-center justify-between pb-2">
+            <div className="kpi-label font-medium">Leads do Mês</div>
+            <div className="kpi-icon"><Plus size={20} /></div>
+          </div>
+          <div className="kpi-value">2</div>
+          <div className="kpi-foot flex items-center justify-between">
+            <span>Novos este mês</span>
+            <span className="text-emerald-500 font-bold ml-1 text-[10px]">↗ +2</span>
+          </div>
+        </GlassCard>
+
+        <GlassCard className="kpi-card kpi-card--teal border-none">
+          <div className="flex flex-row items-center justify-between pb-2">
+            <div className="kpi-label font-medium">Taxa de Conversão</div>
+            <div className="kpi-icon"><TrendingUp size={20} /></div>
+          </div>
+          <div className="kpi-value">0.0%</div>
+          <div className="kpi-foot">0 vendas fechadas</div>
+        </GlassCard>
+
+        <GlassCard className="kpi-card kpi-card--dark border-none">
+          <div className="flex flex-row items-center justify-between pb-2">
+            <div className="kpi-label font-medium">Empreendimentos</div>
+            <div className="kpi-icon"><Building2 size={20} /></div>
+          </div>
+          <div className="kpi-value">{mockProperties.length}</div>
+          <div className="kpi-foot">Cadastrados</div>
+        </GlassCard>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-none shadow-sm">
+        <GlassCard className="border-none">
           <CardHeader>
-            <CardTitle>Leads por Etapa do Funil</CardTitle>
+            <CardTitle className="font-display">Leads por Etapa do Funil</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={funnelData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#00DFFC" />
+                    <stop offset="100%" stopColor="#005F6B" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0, 223, 252, 0.2)', boxShadow: 'var(--shadow-md)', background: 'var(--surface)', backdropFilter: 'blur(10px)' }}
                   cursor={{ fill: 'rgba(0, 95, 107, 0.05)' }}
                 />
-                <Bar dataKey="value" fill="#005F6B" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="url(#barGradient)" radius={[6, 6, 0, 0]} className="dashboard-bar-chart" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </GlassCard>
 
-        <Card className="border-none shadow-sm">
+        <GlassCard className="border-none">
           <CardHeader>
-            <CardTitle>Origem dos Leads</CardTitle>
+            <CardTitle className="font-display">Origem dos Leads</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <RePieChart>
+              <RePieChart className="pie-glow">
                 <Pie
                   data={sourceData}
                   cx="50%"
@@ -287,40 +295,41 @@ function DashboardView() {
                   outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
+                  stroke="none"
                 >
                   {sourceData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36}/>
+                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0, 223, 252, 0.2)', backgroundColor: 'var(--surface-solid)' }} />
+                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }}/>
               </RePieChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </GlassCard>
       </div>
 
-      <Card className="border-none shadow-sm">
+      <GlassCard className="border-none">
         <CardHeader>
-          <CardTitle>Empreendimentos Mais Trabalhados</CardTitle>
+          <CardTitle className="font-display">Empreendimentos Mais Trabalhados</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {mockProperties.map((prop) => (
-              <div key={prop.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+              <div key={prop.id} className="prop-mini-card">
                 <div>
-                  <h4 className="font-semibold">{prop.name}</h4>
-                  <p className="text-sm text-muted-foreground">{prop.region}</p>
+                  <h4 className="font-semibold text-sm">{prop.name}</h4>
+                  <p className="text-[11px] text-muted-foreground">{prop.region}</p>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold">0</div>
-                  <p className="text-[10px] uppercase text-muted-foreground">leads</p>
+                <div className="flex flex-col items-end">
+                  <div className="badge badge--novo scale-90 px-3">0</div>
+                  <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest mt-1">Leads</p>
                 </div>
               </div>
             ))}
           </div>
         </CardContent>
-      </Card>
+      </GlassCard>
     </div>
   );
 }
