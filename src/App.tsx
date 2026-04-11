@@ -402,7 +402,7 @@ function LeadsView() {
         </Select>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="leads-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredLeads.map((lead) => (
           <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(0,180,204,0.12)] transition-all duration-300" data-status={statusToSlug(lead.status)}>
             <CardHeader className="pb-2 px-0 pt-0">
