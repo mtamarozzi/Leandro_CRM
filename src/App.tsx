@@ -489,7 +489,7 @@ function ImportView() {
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-background/50 rounded-lg border border-border/50 backdrop-blur-sm">
+            <div className="info-box mt-6">
               <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Bell className="h-4 w-4 text-primary" /> Formato esperado:
               </h4>
@@ -513,7 +513,7 @@ function ImportView() {
               className="paste-area"
               placeholder="João Silva, 11987654321, joao@email.com&#10;Maria Santos, 11976543210&#10;Pedro Costa, 11965432109, pedro@email.com"
             />
-            <div className="p-4 bg-background/50 rounded-lg border border-border/50 backdrop-blur-sm">
+            <div className="info-box">
               <p className="text-xs text-muted-foreground flex items-center gap-2">
                 <Bell className="h-4 w-4 text-primary shrink-0" /> Cada linha vira um novo lead. Separe os dados por vírgula, ponto e vírgula ou tab.
               </p>

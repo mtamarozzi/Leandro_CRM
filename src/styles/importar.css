@@ -41,6 +41,22 @@
   box-shadow: 0 8px 24px rgba(0, 180, 204, 0.4);
 }
 
+/* Info box with left teal accent (Formato esperado, etc) */
+.info-box {
+  padding: 1rem 1rem 1rem 1.15rem;
+  border-radius: var(--radius-md);
+  background: rgba(0, 180, 204, 0.06);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal-500);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .info-box {
+  background: rgba(0, 223, 252, 0.05);
+  border-left-color: var(--cyan-300);
+}
+
 .paste-area {
   background: rgba(0, 0, 0, 0.02);
   border: 1px solid var(--border);
