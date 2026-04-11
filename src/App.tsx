@@ -577,44 +577,55 @@ function FunnelView() {
   
   const getLeadsByStatus = (status: LeadStatus) => mockLeads.filter(l => l.status === status);
 
+  const statusToSlug = (status: string) => {
+    const map: Record<string, string> = {
+      'Novo': 'novo',
+      'Em Contato': 'contato',
+      'Visita Agendada': 'visita',
+      'Proposta': 'proposta',
+      'Fechado': 'fechado'
+    };
+    return map[status] || 'novo';
+  };
+
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Funil de Vendas</h2>
+        <h2 className="text-3xl font-display font-bold tracking-tight">Funil de Vendas</h2>
         <p className="text-muted-foreground">Arraste e solte os leads entre as etapas do funil</p>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4 min-h-[600px]">
         {columns.map((column) => (
-          <div key={column} className="flex-shrink-0 w-80 flex flex-col gap-4">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">{column}</h3>
-              <Badge variant="secondary" className="bg-slate-200 text-slate-700">{getLeadsByStatus(column).length}</Badge>
+          <div key={column} className="kanban-column" data-stage={statusToSlug(column)}>
+            <div className="kanban-column__header">
+              <h3 className="font-display font-bold text-sm uppercase tracking-wider text-foreground">{column}</h3>
+              <div className="col-count">{getLeadsByStatus(column).length}</div>
             </div>
             
-            <div className="flex-1 bg-slate-100/50 rounded-2xl p-3 space-y-3 border border-slate-200/50">
+            <div className="flex-1 p-3 space-y-3 bg-foreground/5 relative z-10 rounded-b-[var(--radius-lg)]">
               {getLeadsByStatus(column).map((lead) => (
-                <Card key={lead.id} className="border-none shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing">
-                  <CardContent className="p-4 space-y-3">
+                <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_4px_16px_rgba(0,180,204,0.1)] transition-all cursor-grab active:cursor-grabbing !p-3" data-status={statusToSlug(lead.status)}>
+                  <CardContent className="p-0 space-y-3">
                     <div>
-                      <h4 className="font-bold text-sm">{lead.name}</h4>
+                      <h4 className="font-display font-bold text-sm">{lead.name}</h4>
                       <div className="flex flex-col gap-1 mt-2 text-[11px] text-muted-foreground">
-                        <span className="flex items-center gap-1"><Phone size={10} /> {lead.phone}</span>
-                        <span className="flex items-center gap-1"><Mail size={10} /> {lead.email}</span>
+                        <span className="flex items-center gap-1"><Phone size={10} className="text-primary/70" /> {lead.phone}</span>
+                        <span className="flex items-center gap-1"><Mail size={10} className="text-primary/70" /> {lead.email}</span>
                       </div>
                     </div>
-                    <div className="pt-2 border-t border-slate-100">
-                      <p className="text-[11px] font-semibold">{lead.interest}</p>
+                    <div className="pt-2 border-t border-border/50">
+                      <p className="text-[11px] font-semibold text-foreground">{lead.interest}</p>
                       <p className="text-[10px] text-muted-foreground">{lead.valueRange}</p>
                     </div>
-                    <Button size="sm" className="w-full h-8 bg-[#25D366] hover:bg-[#128C7E] text-white text-[10px]">
+                    <BtnWhatsapp className="h-8 py-0 text-[10px] w-full">
                       <MessageSquare className="mr-1 h-3 w-3" /> WhatsApp
-                    </Button>
+                    </BtnWhatsapp>
                   </CardContent>
-                </Card>
+                </GlassCard>
               ))}
               {getLeadsByStatus(column).length === 0 && (
-                <div className="h-20 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl text-xs text-muted-foreground">
+                <div className="h-20 flex items-center justify-center border-2 border-dashed border-border/50 rounded-xl text-xs text-muted-foreground">
                   Sem leads nesta etapa
                 </div>
               )}
@@ -623,24 +634,34 @@ function FunnelView() {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm">
+      <GlassCard className="border-none">
         <CardHeader>
-          <CardTitle>Estatísticas do Funil</CardTitle>
+          <CardTitle className="font-display">Estatísticas do Funil</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {columns.map((col) => (
-              <div key={col} className="text-center p-4 bg-slate-50 rounded-xl">
-                <div className="text-2xl font-bold text-primary">{getLeadsByStatus(col).length}</div>
-                <div className="text-xs font-medium text-muted-foreground">{col}</div>
-                <div className="text-[10px] text-muted-foreground mt-1">
-                  {((getLeadsByStatus(col).length / mockLeads.length) * 100).toFixed(1)}%
+          <div className="funnel-meter">
+            {columns.map((col) => {
+              const count = getLeadsByStatus(col).length;
+              if (count === 0) return null;
+              const percentage = ((count / mockLeads.length) * 100).toFixed(1);
+              return (
+                <div 
+                  key={col} 
+                  className="seg" 
+                  style={{ 
+                    '--w': `${percentage}%`, 
+                    background: `var(--status-${statusToSlug(col)})` 
+                  } as React.CSSProperties}
+                  title={`${col}: ${count} leads (${percentage}%)`}
+                >
+                  <span className="hidden md:inline">{col} · {count}</span>
+                  <span className="inline md:hidden">{count}</span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
-      </Card>
+      </GlassCard>
     </div>
   );
 }

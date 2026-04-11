@@ -4,6 +4,7 @@
 @import "./styles/dashboard.css";
 @import "./styles/leads.css";
 @import "./styles/importar.css";
+@import "./styles/funil.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
