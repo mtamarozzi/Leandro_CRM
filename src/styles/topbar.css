@@ -42,7 +42,14 @@
   font-weight: 800;
   color: var(--text-primary);
   font-family: 'Sora', sans-serif;
+  transition: all .4s;
 }
+[data-theme="dark"] .logo-mark,
+.dark .logo-mark { 
+  color: var(--cyan-300); 
+  border-color: var(--cyan-300); 
+}
+
 .logo-text {
   font-family: 'Sora', sans-serif;
   font-weight: 700;
@@ -50,6 +57,10 @@
   letter-spacing: -0.01em;
   color: var(--text-primary);
   line-height: 1;
+}
+[data-theme="dark"] .logo-text,
+.dark .logo-text { 
+  color: var(--text-primary); 
 }
 .logo-sub {
   font-size: 9px;

@@ -11,7 +11,7 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
 @theme inline {
     --font-heading: var(--font-sans);
@@ -91,7 +91,7 @@
     --sidebar-ring: #005F6B;
 }
 
-.dark {
+[data-theme="dark"], .dark {
     --background: #343838;
     --foreground: #ffffff;
     --card: #343838;
