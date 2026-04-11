@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { LeadStatus } from '@/types';
+import type { LeadStatus } from '@/src/types';
 
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   status: string;

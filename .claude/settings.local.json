@@ -6,7 +6,8 @@
       "Bash(git commit -m ':*)",
       "Bash(grep -viE 'node_modules|\\\\.ts$|\\\\.json$')",
       "Bash(npx tsc:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
