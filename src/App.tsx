@@ -16,9 +16,9 @@ import {
   Phone,
   Mail,
   Filter,
-  ChevronRight,
-  Home,
   TrendingUp,
+  ArrowRight,
+  Star,
   PieChart,
   Sun,
   Moon
@@ -656,81 +656,70 @@ function FunnelView() {
 }
 
 function PropertiesView() {
+  const statusToTagClass = (status: Property['status']) => {
+    const map: Record<Property['status'], string> = {
+      'Em Obras': 'tag--em-obras',
+      'Lançamento': 'tag--lancamento',
+      'Pronto': 'tag--pronto',
+    };
+    return map[status];
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Empreendimentos</h2>
+          <h2 className="text-3xl font-display font-bold tracking-tight">Empreendimentos</h2>
           <p className="text-muted-foreground">{mockProperties.length} empreendimentos cadastrados</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <BtnPrimary>
           <Plus className="mr-2 h-4 w-4" /> Novo Empreendimento
-        </Button>
+        </BtnPrimary>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {mockProperties.map((prop) => (
-          <Card key={prop.id} className="border-none shadow-sm overflow-hidden group">
-            <div className="aspect-video bg-slate-200 relative overflow-hidden">
-              <img 
-                src={`https://picsum.photos/seed/${prop.name}/800/450`} 
-                alt={prop.name}
-                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute top-4 left-4 flex gap-2">
-                <Badge className="bg-white/90 text-primary backdrop-blur-sm border-none">
-                  {prop.status}
-                </Badge>
-                {prop.isFeatured && (
-                  <Badge className="bg-yellow-400 text-yellow-900 border-none">
-                    Destaque
-                  </Badge>
-                )}
+      <div className="emp-grid">
+        {mockProperties.map((prop, idx) => {
+          const mockClass = `emp-${(idx % 3) + 1}`;
+          return (
+            <div key={prop.id} className="emp-card">
+              <div className="emp-image">
+                <div className={`emp-image-mock ${mockClass}`} />
+                <div className="tag-stack">
+                  <span className={`tag ${statusToTagClass(prop.status)}`}>{prop.status}</span>
+                  {prop.isFeatured && (
+                    <span className="tag tag--destaque">
+                      <Star size={10} className="inline mr-1 -mt-0.5 fill-current" />
+                      Destaque
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="absolute top-4 right-4 flex gap-2">
-                <Button variant="secondary" size="icon" className="h-8 w-8 bg-white/90 backdrop-blur-sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
-                <Button variant="destructive" size="icon" className="h-8 w-8">
-                  <X className="h-4 w-4" />
-                </Button>
+              <div className="emp-body">
+                <div className="emp-name">{prop.name}</div>
+                <div className="emp-builder">{prop.developer}</div>
+                <div className="emp-info">
+                  <div>
+                    <small>📍 Localização</small>
+                    <div className="emp-info-value">{prop.region}</div>
+                  </div>
+                  <div>
+                    <small>💰 Preço</small>
+                    <div className="emp-price">{prop.priceRange}</div>
+                  </div>
+                  <div>
+                    <small>🏠 Tipologia</small>
+                    <div className="emp-info-value">{prop.units}</div>
+                  </div>
+                </div>
+                <p className="emp-desc">{prop.description}</p>
+                <button type="button" className="btn-material">
+                  Ver Material de Vendas
+                  <ArrowRight size={14} />
+                </button>
               </div>
             </div>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>{prop.name}</CardTitle>
-                  <CardDescription className="flex items-center gap-1 mt-1">
-                    <Building2 size={14} /> {prop.developer}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Localização</p>
-                  <p className="font-medium flex items-center gap-1"><Home size={14} /> {prop.region}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Preço</p>
-                  <p className="font-medium text-primary">{prop.priceRange}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Tipologia</p>
-                  <p className="font-medium">{prop.units}</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {prop.description}
-              </p>
-              <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-white">
-                Ver Material de Vendas
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

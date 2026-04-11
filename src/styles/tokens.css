@@ -40,6 +40,7 @@
   --text-secondary: #475569;
   --text-muted: #94A3B8;
   --border: #E2E8F0;
+  --border-strong: rgba(0, 95, 107, 0.25);
 
   /* Radius e Espaçamentos */
   --radius-sm: 8px;
@@ -63,6 +64,7 @@
   --text-secondary: #CBD5E1;
   --text-muted: #64748B;
   --border: #334155;
+  --border-strong: rgba(0, 223, 252, 0.28);
 
   /* Efeitos (Glassmorphism Dark) */
   --glass-bg: rgba(15, 23, 42, 0.6);

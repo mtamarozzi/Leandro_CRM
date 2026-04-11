@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Leandro Alonso — Preview Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   TOKENS
+============================================ */
+:root, [data-theme="light"] {
+  --ink: #343838;
+  --teal-900: #005F6B;
+  --teal-700: #008C9E;
+  --teal-500: #00B4CC;
+  --cyan-300: #00DFFC;
+
+  --status-novo: #00B4CC;
+  --status-contato: #00DFFC;
+  --status-visita: #008C9E;
+  --status-proposta: #005F6B;
+  --status-perdido: #6B7280;
+
+  --bg-base: #F0F4F5;
+  --surface: rgba(255, 255, 255, 0.55);
+  --surface-strong: rgba(255, 255, 255, 0.75);
+  --border: rgba(0, 95, 107, 0.12);
+  --border-strong: rgba(0, 95, 107, 0.25);
+  --text-primary: #1A2628;
+  --text-secondary: #5C6B6E;
+  --text-muted: #8A9598;
+  --logo-filter: none;
+
+  --grad-radial-1: rgba(0, 180, 204, 0.18);
+  --grad-radial-2: rgba(0, 95, 107, 0.14);
+}
+
+[data-theme="dark"] {
+  --bg-base: #0A1416;
+  --surface: rgba(20, 35, 38, 0.45);
+  --surface-strong: rgba(20, 35, 38, 0.7);
+  --border: rgba(0, 223, 252, 0.12);
+  --border-strong: rgba(0, 223, 252, 0.28);
+  --text-primary: #E8F4F6;
+  --text-secondary: #9BB0B4;
+  --text-muted: #5F7378;
+  --logo-filter: invert(1) brightness(1.5) hue-rotate(160deg);
+
+  --grad-radial-1: rgba(0, 180, 204, 0.28);
+  --grad-radial-2: rgba(0, 95, 107, 0.22);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { min-height: 100vh; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, var(--grad-radial-1), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, var(--grad-radial-2), transparent 50%),
+    var(--bg-base);
+  background-attachment: fixed;
+  transition: background-color .4s;
+}
+
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 8px 32px rgba(0, 95, 107, 0.08);
+}
+
+[data-theme="dark"] .glass {
+  box-shadow:
+    0 1px 0 rgba(0, 223, 252, 0.08) inset,
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   TOPBAR (compartilhada)
+============================================ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--surface);
+  backdrop-filter: blur(24px) saturate(160%);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(0, 223, 252, 0.18);
+}
+
+.logo-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -30% -20%;
+  background: radial-gradient(ellipse at center, rgba(0,223,252,0.35), transparent 70%);
+  filter: blur(20px);
+  z-index: -1;
+}
+.logo-mark {
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  border: 2px solid var(--text-primary);
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Sora', sans-serif;
+}
+.logo-text {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.logo-sub {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.nav {
+  display: flex;
+  gap: 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+  border: 1px solid transparent;
+  background: none;
+  font-family: inherit;
+}
+.nav-item:hover {
+  color: var(--text-primary);
+  background: rgba(0, 180, 204, 0.08);
+}
+.nav-item.active {
+  color: var(--teal-900);
+  background: linear-gradient(135deg, rgba(0,223,252,0.18), rgba(0,180,204,0.10));
+  border-color: rgba(0, 180, 204, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(0, 223, 252, 0.2) inset,
+    0 4px 16px rgba(0, 180, 204, 0.22);
+}
+[data-theme="dark"] .nav-item.active {
+  color: var(--cyan-300);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icon-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  display: grid; place-items: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: transform .3s, color .2s;
+}
+.icon-btn:hover { color: var(--teal-500); transform: translateY(-1px); }
+.theme-toggle:hover { transform: rotate(20deg); }
+
+.avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-700), var(--teal-500));
+  color: white;
+  display: grid; place-items: center;
+  font-weight: 600;
+  border: 2px solid var(--bg-base);
+  box-shadow: 0 0 0 2px var(--teal-500);
+  font-family: 'Sora', sans-serif;
+}
+
+/* ============================================
+   PREVIEW NAVIGATION (controles do preview)
+============================================ */
+.preview-nav {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: var(--surface-strong);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  box-shadow: 0 16px 48px rgba(0, 95, 107, 0.18);
+}
+.preview-nav button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all .2s;
+}
+.preview-nav button.active {
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-700));
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 95, 107, 0.3);
+}
+
+/* ============================================
+   LAYOUT base de tela
+============================================ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+.page {
+  padding: 28px 40px 100px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.page-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--text-primary), var(--teal-700));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ============================================
+   DASHBOARD
+============================================ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  position: relative;
+  padding: 22px;
+  overflow: hidden;
+}
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: -40%; right: -20%;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, var(--kpi-glow, rgba(0,223,252,0.22)), transparent 70%);
+  pointer-events: none;
+}
+.kpi-card[data-glow="1"] { --kpi-glow: rgba(0, 180, 204, 0.25); }
+.kpi-card[data-glow="2"] { --kpi-glow: rgba(0, 223, 252, 0.28); }
+.kpi-card[data-glow="3"] { --kpi-glow: rgba(0, 140, 158, 0.22); }
+.kpi-card[data-glow="4"] { --kpi-glow: rgba(0, 95, 107, 0.22); }
+.kpi-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--teal-700), var(--teal-500));
+  color: white;
+  display: grid; place-items: center;
+  box-shadow: 0 4px 16px rgba(0, 180, 204, 0.4);
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+.kpi-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  position: relative; z-index: 1;
+}
+.kpi-value {
+  font-family: 'Sora', sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+  margin: 6px 0 4px;
+  position: relative; z-index: 1;
+}
+[data-theme="dark"] .kpi-value {
+  background: linear-gradient(135deg, var(--cyan-300), var(--teal-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.kpi-foot {
+  color: var(--text-muted);
+  font-size: 11px;
+  position: relative; z-index: 1;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.chart-card {
+  padding: 22px;
+}
+.chart-title {
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 18px;
+  color: var(--text-primary);
+}
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  align-items: end;
+  height: 180px;
+}
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--cyan-300), var(--teal-700));
+  border-radius: 8px 8px 4px 4px;
+  box-shadow:
+    0 0 16px rgba(0, 180, 204, 0.45),
+    inset 0 1px 0 rgba(255,255,255,0.5);
+  position: relative;
+  transition: filter .2s;
+}
+.bar:hover { filter: brightness(1.15); }
+.bar-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+.bar-value {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--teal-900);
+}
+[data-theme="dark"] .bar-value { color: var(--cyan-300); }
+
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  position: relative;
+}
+.donut {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--teal-500) 0% 30%,
+    var(--cyan-300) 30% 50%,
+    var(--ink) 50% 65%,
+    var(--teal-700) 65% 80%,
+    var(--text-muted) 80% 92%,
+    var(--teal-900) 92% 100%
+  );
+  position: relative;
+  filter: drop-shadow(0 0 16px rgba(0, 180, 204, 0.3));
+}
+.donut::before {
+  content: '';
+  position: absolute;
+  inset: 28px;
+  background: var(--bg-base);
+  border-radius: 50%;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+
+.empreendimentos-list {
+  padding: 22px;
+}
+.empreendimento-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border-left: 3px solid var(--row-color);
+  background: rgba(0, 180, 204, 0.04);
+  margin-bottom: 8px;
+  transition: background .2s;
+}
+.empreendimento-row:hover { background: rgba(0, 180, 204, 0.10); }
+.empreendimento-row[data-i="1"] { --row-color: var(--teal-500); }
+.empreendimento-row[data-i="2"] { --row-color: var(--cyan-300); }
+.empreendimento-row[data-i="3"] { --row-color: var(--teal-700); }
+.empreendimento-row strong { font-weight: 600; }
+.empreendimento-row small { display: block; color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+.lead-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teal-900);
+  backdrop-filter: blur(12px);
+}
+[data-theme="dark"] .lead-pill { color: var(--cyan-300); }
+
+/* ============================================
+   LEADS
+============================================ */
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.search-input {
+  flex: 1;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all .2s;
+}
+.search-input:focus {
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 4px rgba(0, 180, 204, 0.15);
+}
+.search-input::placeholder { color: var(--text-muted); }
+.select-glass {
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-700));
+  color: white;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 13px;
+  border: 1px solid rgba(0, 223, 252, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 95, 107, 0.25), 0 0 0 1px rgba(0,180,204,0.2) inset;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(0, 95, 107, 0.32), 0 0 24px rgba(0, 223, 252, 0.4);
+}
+
+.leads-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.lead-card {
+  position: relative;
+  padding: 20px 22px 20px 24px;
+}
+.lead-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 18px; bottom: 18px;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--lead-color);
+  box-shadow: 0 0 12px var(--lead-color);
+}
+.lead-card[data-status="novo"]     { --lead-color: var(--status-novo);     }
+.lead-card[data-status="contato"]  { --lead-color: var(--status-contato);  }
+.lead-card[data-status="visita"]   { --lead-color: var(--status-visita);   }
+.lead-card[data-status="proposta"] { --lead-color: var(--status-proposta); }
+.lead-card[data-status="perdido"]  { --lead-color: var(--status-perdido); opacity: 0.72; }
+.lead-card[data-status="perdido"]:hover { opacity: 1; }
+.lead-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.lead-card__name {
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.badge--novo     { color: var(--status-novo);     background: rgba(0,180,204,.14); }
+.badge--contato  { color: var(--status-contato);  background: rgba(0,223,252,.16); }
+.badge--visita   { color: var(--status-visita);   background: rgba(0,140,158,.16); }
+.badge--proposta { color: var(--status-proposta); background: rgba(0,95,107,.18);  }
+.badge--perdido  { color: var(--status-perdido);  background: rgba(107,114,128,.16);}
+
+.lead-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 10px 0;
+}
+.lead-info strong { color: var(--text-primary); font-weight: 600; }
+.lead-info-row { display: flex; gap: 6px; }
+.lead-info-row span:first-child { width: 70px; color: var(--text-muted); }
+
+.lead-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 12px;
+  background: rgba(0, 180, 204, 0.05);
+  border-left: 2px solid var(--border-strong);
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.btn-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 16px;
+  background: rgba(37, 211, 102, 0.1);
+  color: #25D366;
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+.btn-whatsapp:hover {
+  background: #25D366;
+  color: white;
+  box-shadow: 0 0 16px rgba(37, 211, 102, 0.5);
+}
+
+/* ============================================
+   IMPORTAR
+============================================ */
+.import-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.import-card { padding: 26px; }
+.import-card h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dropzone {
+  padding: 38px 20px;
+  border-radius: 14px;
+  border: 2px dashed var(--border-strong);
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all .3s;
+}
+.dropzone:hover {
+  border-color: var(--cyan-300);
+  background: rgba(0, 223, 252, 0.04);
+}
+.dropzone-icon {
+  width: 64px; height: 64px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-700), var(--cyan-300));
+  display: grid; place-items: center;
+  color: white;
+  box-shadow: 0 8px 24px rgba(0, 180, 204, 0.4);
+}
+.dropzone-text {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.dropzone-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.format-info {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: rgba(0, 180, 204, 0.06);
+  border-left: 3px solid var(--teal-500);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.format-info strong { color: var(--text-primary); display: block; margin-bottom: 4px; }
+
+.paste-area {
+  width: 100%;
+  min-height: 180px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  resize: vertical;
+  outline: none;
+  transition: all .2s;
+}
+[data-theme="dark"] .paste-area { background: rgba(255,255,255,0.03); }
+.paste-area:focus {
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 4px rgba(0, 180, 204, 0.15);
+}
+.import-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-700));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 95, 107, 0.25);
+}
+
+.how-to-card { padding: 26px; }
+.how-to-card h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.how-to {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+.how-to__step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px;
+  background: rgba(0, 180, 204, 0.04);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.how-to__num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-500));
+  color: white;
+  display: grid; place-items: center;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 95, 107, 0.3);
+}
+.how-to__step strong {
+  display: block;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+.how-to__step p {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ============================================
+   FUNIL
+============================================ */
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.kanban-column {
+  border-radius: 16px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+.kanban-column__header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+.kanban-column__header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 16px; right: 16px;
+  height: 2px;
+  background: var(--col-color);
+  box-shadow: 0 0 12px var(--col-color);
+  border-radius: 2px;
+}
+.kanban-column[data-stage="novo"]     { --col-color: var(--status-novo);     }
+.kanban-column[data-stage="contato"]  { --col-color: var(--status-contato);  }
+.kanban-column[data-stage="visita"]   { --col-color: var(--status-visita);   }
+.kanban-column[data-stage="proposta"] { --col-color: var(--status-proposta); }
+.kanban-column[data-stage="perdido"]  { --col-color: var(--status-perdido);  }
+.col-name {
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+.col-count {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--col-color);
+  color: var(--col-color);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 0 10px var(--col-color);
+}
+.kanban-cards {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mini-card {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--col-color);
+  font-size: 11px;
+}
+.mini-card strong {
+  display: block;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.mini-card .info { color: var(--text-muted); margin: 2px 0; }
+.mini-card .price { color: var(--teal-900); font-weight: 600; margin-top: 4px; }
+[data-theme="dark"] .mini-card .price { color: var(--cyan-300); }
+
+.funnel-meter-card { padding: 22px; }
+.funnel-meter-card h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  margin-bottom: 14px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.funnel-meter {
+  display: flex;
+  height: 60px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.seg {
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 700;
+  font-size: 11px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  padding: 0 8px;
+  text-align: center;
+  transition: filter .2s;
+}
+.seg:hover { filter: brightness(1.15); }
+.seg small { display: block; opacity: 0.85; font-weight: 500; font-size: 9px; margin-top: 2px;}
+
+/* ============================================
+   EMPREENDIMENTOS
+============================================ */
+.emp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+.emp-card {
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  transition: transform .3s, box-shadow .3s;
+}
+.emp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0, 95, 107, 0.18), 0 0 32px rgba(0, 180, 204, 0.18);
+}
+.emp-image {
+  position: relative;
+  aspect-ratio: 16 / 8;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a3a3f, #005F6B, #00B4CC);
+}
+.emp-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5));
+}
+.emp-image-mock {
+  width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+.emp-1 { background: linear-gradient(135deg, #2C5F6F 0%, #1a3a3f 50%, #005F6B 100%); }
+.emp-2 { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #c44569 100%); }
+.emp-3 { background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #5d6d7e 100%); }
+
+.tag-stack {
+  position: absolute;
+  top: 14px; left: 14px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+.tag {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  border: 1px solid currentColor;
+}
+.tag--em-obras   { color: #FFA726; background: rgba(255,167,38,.2); }
+.tag--lancamento { color: var(--cyan-300); background: rgba(0,223,252,.2); }
+.tag--pronto     { color: #10B981; background: rgba(16,185,129,.2); }
+.tag--destaque   { color: #FFD54F; background: rgba(255,213,79,.2); box-shadow: 0 0 14px rgba(255,213,79,.5); }
+
+.emp-body {
+  padding: 20px;
+}
+.emp-name {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+}
+.emp-builder {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+.emp-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.emp-info div small {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.emp-info-value { font-weight: 600; font-size: 12px; color: var(--text-primary); }
+.emp-price {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--teal-500), var(--cyan-300));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 14px;
+}
+.emp-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.btn-material {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  background: rgba(0, 95, 107, 0.06);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  color: var(--teal-900);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+}
+[data-theme="dark"] .btn-material { color: var(--cyan-300); }
+.btn-material:hover {
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-700));
+  color: white;
+  border-color: transparent;
+}
+.btn-material svg { transition: transform .2s; }
+.btn-material:hover svg { transform: translateX(4px); }
+
+/* ============================================
+   AGENDA
+============================================ */
+.agenda-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 18px;
+}
+.cal-card { padding: 22px; }
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.cal-cell {
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  min-height: 76px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  transition: background .2s;
+}
+.cal-cell.weekday {
+  min-height: auto;
+  padding: 8px;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-align: center;
+  background: rgba(0, 180, 204, 0.04);
+}
+.cal-cell:hover { background: rgba(0, 180, 204, 0.08); }
+.cal-day {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.cal-cell--today {
+  background: rgba(0, 180, 204, 0.14);
+  box-shadow: inset 0 0 0 2px var(--teal-500);
+}
+.cal-cell--today .cal-day {
+  color: var(--teal-900);
+  font-weight: 700;
+}
+[data-theme="dark"] .cal-cell--today .cal-day { color: var(--cyan-300); }
+.event-pill {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 3px solid var(--evt-color);
+  background: var(--evt-bg);
+  color: var(--evt-color);
+}
+.event-pill[data-type="followup"] { --evt-color: #FFA726; --evt-bg: rgba(255,167,38,.18); }
+.event-pill[data-type="visita"]   { --evt-color: var(--teal-500); --evt-bg: rgba(0,180,204,.18); }
+.event-pill[data-type="reuniao"]  { --evt-color: var(--teal-700); --evt-bg: rgba(0,140,158,.20); }
+
+.upcoming-card { padding: 22px; }
+.upcoming-card h3 {
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.event-item {
+  position: relative;
+  padding: 14px 14px 14px 18px;
+  border-radius: 12px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.event-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 14px; bottom: 14px;
+  width: 3px;
+  background: var(--evt-color);
+  border-radius: 3px;
+  box-shadow: 0 0 10px var(--evt-color);
+}
+.event-item[data-type="followup"] { --evt-color: #FFA726; --evt-bg: rgba(255,167,38,.18); }
+.event-item[data-type="visita"]   { --evt-color: var(--teal-500); --evt-bg: rgba(0,180,204,.18); }
+.event-item[data-type="reuniao"]  { --evt-color: var(--teal-700); --evt-bg: rgba(0,140,158,.20); }
+.event-type {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--evt-bg);
+  color: var(--evt-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.event-title {
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.event-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* ============================================
+   ANIMAÇÕES
+============================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stagger > * { animation: fadeInUp .5s ease both; }
+.stagger > *:nth-child(1) { animation-delay: .05s; }
+.stagger > *:nth-child(2) { animation-delay: .10s; }
+.stagger > *:nth-child(3) { animation-delay: .15s; }
+.stagger > *:nth-child(4) { animation-delay: .20s; }
+.stagger > *:nth-child(5) { animation-delay: .25s; }
+.stagger > *:nth-child(6) { animation-delay: .30s; }
+
+.logo-mark { transition: filter .4s; }
+[data-theme="dark"] .logo-mark { color: var(--cyan-300); border-color: var(--cyan-300); }
+[data-theme="dark"] .logo-text { color: var(--text-primary); }
+
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     TOPBAR
+============================================ -->
+<header class="topbar">
+  <div class="logo-wrapper">
+    <div class="logo-mark">LA</div>
+    <div>
+      <div class="logo-sub">creci 300771-F</div>
+      <div class="logo-text">LEANDRO ALONSO</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-item" data-screen="dashboard">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" data-screen="leads">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Leads
+    </button>
+    <button class="nav-item" data-screen="importar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Importar
+    </button>
+    <button class="nav-item" data-screen="funil">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Funil
+    </button>
+    <button class="nav-item" data-screen="empreendimentos">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+      Empreendimentos
+    </button>
+    <button class="nav-item" data-screen="agenda">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Agenda
+    </button>
+  </nav>
+
+  <div class="topbar-actions">
+    <button class="icon-btn theme-toggle" id="themeToggle" aria-label="Alternar tema">
+      <svg id="iconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <button class="icon-btn" aria-label="Notificações">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+    <div class="avatar">M</div>
+  </div>
+</header>
+
+<!-- ============================================
+     SCREEN: DASHBOARD
+============================================ -->
+<section class="screen active" id="screen-dashboard">
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Visão geral do seu negócio · abril de 2026</p>
+      </div>
+    </div>
+
+    <div class="kpi-grid stagger">
+      <div class="kpi-card glass" data-glow="1">
+        <div class="kpi-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="kpi-label">Total de Leads</div>
+        <div class="kpi-value">6</div>
+        <div class="kpi-foot">Todos os tempos</div>
+      </div>
+      <div class="kpi-card glass" data-glow="2">
+        <div class="kpi-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="kpi-label">Leads do Mês</div>
+        <div class="kpi-value">2</div>
+        <div class="kpi-foot">Novos este mês</div>
+      </div>
+      <div class="kpi-card glass" data-glow="3">
+        <div class="kpi-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="kpi-label">Taxa de Conversão</div>
+        <div class="kpi-value">0%</div>
+        <div class="kpi-foot">0 vendas fechadas</div>
+      </div>
+      <div class="kpi-card glass" data-glow="4">
+        <div class="kpi-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+        </div>
+        <div class="kpi-label">Empreendimentos</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-foot">Cadastrados</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card glass">
+        <h3 class="chart-title">Leads por Etapa do Funil</h3>
+        <div class="bars">
+          <div class="bar-col"><div class="bar-value">1</div><div class="bar" style="height:50%"></div><div class="bar-label">Novo</div></div>
+          <div class="bar-col"><div class="bar-value">2</div><div class="bar" style="height:100%"></div><div class="bar-label">Em Contato</div></div>
+          <div class="bar-col"><div class="bar-value">1</div><div class="bar" style="height:50%"></div><div class="bar-label">Visita</div></div>
+          <div class="bar-col"><div class="bar-value">1</div><div class="bar" style="height:50%"></div><div class="bar-label">Proposta</div></div>
+          <div class="bar-col"><div class="bar-value">1</div><div class="bar" style="height:50%"></div><div class="bar-label">Perdido</div></div>
+        </div>
+      </div>
+      <div class="chart-card glass">
+        <h3 class="chart-title">Origem dos Leads</h3>
+        <div class="donut-wrap"><div class="donut"></div></div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="color:var(--teal-500)"></span>Facebook</div>
+          <div class="legend-item"><span class="legend-dot" style="color:var(--cyan-300)"></span>Google</div>
+          <div class="legend-item"><span class="legend-dot" style="color:var(--ink)"></span>Indicação</div>
+          <div class="legend-item"><span class="legend-dot" style="color:var(--teal-700)"></span>Instagram</div>
+          <div class="legend-item"><span class="legend-dot" style="color:var(--text-muted)"></span>Tráfego pago</div>
+          <div class="legend-item"><span class="legend-dot" style="color:var(--teal-900)"></span>WhatsApp</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empreendimentos-list glass">
+      <h3 class="chart-title">Empreendimentos Mais Trabalhados</h3>
+      <div class="empreendimento-row" data-i="1">
+        <div>
+          <strong>Vista Park Residence</strong>
+          <small>Zona Oeste · Pinheiros</small>
+        </div>
+        <span class="lead-pill">0 LEADS</span>
+      </div>
+      <div class="empreendimento-row" data-i="2">
+        <div>
+          <strong>Jardim das Flores</strong>
+          <small>Zona Sul · Vila Mariana</small>
+        </div>
+        <span class="lead-pill">0 LEADS</span>
+      </div>
+      <div class="empreendimento-row" data-i="3">
+        <div>
+          <strong>Residencial Harmonia</strong>
+          <small>Centro</small>
+        </div>
+        <span class="lead-pill">0 LEADS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     SCREEN: LEADS
+============================================ -->
+<section class="screen" id="screen-leads">
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Leads</h1>
+        <p class="page-subtitle">6 leads encontrados</p>
+      </div>
+      <button class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Lead
+      </button>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" placeholder="🔍  Buscar por nome ou telefone...">
+      <select class="select-glass"><option>Todos os status</option></select>
+      <select class="select-glass"><option>Todas as origens</option></select>
+    </div>
+
+    <div class="leads-grid stagger">
+      <div class="lead-card glass" data-status="contato">
+        <div class="lead-card__head">
+          <div>
+            <div class="lead-card__name">Carlos Silva</div>
+            <span class="badge badge--contato">Em Contato</span>
+          </div>
+        </div>
+        <div class="lead-info">
+          <div>📞 11987654321</div>
+          <div>✉️ carlos@email.com</div>
+          <div class="lead-info-row"><span>Interesse:</span><strong>Apartamento 2 dorms</strong></div>
+          <div class="lead-info-row"><span>Faixa:</span><strong>R$ 300.000 – R$ 400.000</strong></div>
+          <div class="lead-info-row"><span>Região:</span><strong>Zona Sul</strong></div>
+          <div class="lead-info-row"><span>Contato:</span><strong>2026-04-08</strong></div>
+        </div>
+        <div class="lead-note">Cliente procura imóvel próximo ao metrô. Tem urgência.</div>
+        <button class="btn-whatsapp">💬 WhatsApp</button>
+      </div>
+
+      <div class="lead-card glass" data-status="visita">
+        <div class="lead-card__head">
+          <div>
+            <div class="lead-card__name">Ana Paula Santos</div>
+            <span class="badge badge--visita">Visita Agendada</span>
+          </div>
+        </div>
+        <div class="lead-info">
+          <div>📞 11976543210</div>
+          <div>✉️ ana.santos@email.com</div>
+          <div class="lead-info-row"><span>Interesse:</span><strong>Studio</strong></div>
+          <div class="lead-info-row"><span>Faixa:</span><strong>R$ 200.000 – R$ 300.000</strong></div>
+          <div class="lead-info-row"><span>Região:</span><strong>Centro</strong></div>
+          <div class="lead-info-row"><span>Contato:</span><strong>2026-04-09</strong></div>
+        </div>
+        <div class="lead-note">Indicação da Maria. Primeira compra, precisa de orientação.</div>
+        <button class="btn-whatsapp">💬 WhatsApp</button>
+      </div>
+
+      <div class="lead-card glass" data-status="proposta">
+        <div class="lead-card__head">
+          <div>
+            <div class="lead-card__name">Roberto Oliveira</div>
+            <span class="badge badge--proposta">Proposta</span>
+          </div>
+        </div>
+        <div class="lead-info">
+          <div>📞 11965432109</div>
+          <div>✉️ roberto@email.com</div>
+          <div class="lead-info-row"><span>Interesse:</span><strong>Apartamento 3 dorms</strong></div>
+          <div class="lead-info-row"><span>Faixa:</span><strong>R$ 500.000 – R$ 700.000</strong></div>
+          <div class="lead-info-row"><span>Região:</span><strong>Zona Oeste</strong></div>
+          <div class="lead-info-row"><span>Contato:</span><strong>2026-04-10</strong></div>
+        </div>
+        <div class="lead-note">Interessado no Vista Park. Aguardando análise de crédito.</div>
+        <button class="btn-whatsapp">💬 WhatsApp</button>
+      </div>
+
+      <div class="lead-card glass" data-status="novo">
+        <div class="lead-card__head">
+          <div>
+            <div class="lead-card__name">Juliana Costa</div>
+            <span class="badge badge--novo">Novo</span>
+          </div>
+        </div>
+        <div class="lead-info">
+          <div>📞 11954321098</div>
+          <div>✉️ ju.costa@email.com</div>
+          <div class="lead-info-row"><span>Interesse:</span><strong>Cobertura</strong></div>
+          <div class="lead-info-row"><span>Faixa:</span><strong>Acima de R$ 1.000.000</strong></div>
+          <div class="lead-info-row"><span>Região:</span><strong>Zona Sul</strong></div>
+          <div class="lead-info-row"><span>Contato:</span><strong>2026-04-10</strong></div>
+        </div>
+        <button class="btn-whatsapp">💬 WhatsApp</button>
+      </div>
+
+      <div class="lead-card glass" data-status="contato">
+        <div class="lead-card__head">
+          <div>
+            <div class="lead-card__name">Pedro Henrique</div>
+            <span class="badge badge--contato">Em Contato</span>
+          </div>
+        </div>
+        <div class="lead-info">
+          <div>📞 11943210987</div>
+          <div>✉️ pedro@email.com</div>
+          <div class="lead-info-row"><span>Interesse:</span><strong>Apartamento 2 dorms</strong></div>
+          <div class="lead-info-row"><span>Faixa:</span><strong>R$ 350.000 – R$ 450.000</strong></div>
+          <div class="lead-info-row"><span>Região:</span><strong>Zona Leste</strong></div>
+          <div class="lead-info-row"><span>Contato:</span><strong>2026-04-07</strong></div>
+        </div>
+        <div class="lead-note">Quer visitar no final de semana.</div>
+        <button class="btn-whatsapp">💬 WhatsApp</button>
+      </div>
+
+      <div class="lead-card glass" data-status="perdido">
+        <div class="lead-card__head">
+          <div>
+            <div class="lead-card__name">Marina Rodrigues</div>
+            <span class="badge badge--perdido">Perdido</span>
+          </div>
+        </div>
+        <div class="lead-info">
+          <div>📞 11932109876</div>
+          <div>✉️ marina@email.com</div>
+          <div class="lead-info-row"><span>Interesse:</span><strong>Apartamento 1 dorm</strong></div>
+          <div class="lead-info-row"><span>Faixa:</span><strong>R$ 250.000 – R$ 350.000</strong></div>
+          <div class="lead-info-row"><span>Região:</span><strong>Centro</strong></div>
+          <div class="lead-info-row"><span>Contato:</span><strong>2026-03-11</strong></div>
+        </div>
+        <div class="lead-note">Desistiu da compra. Vai aguardar mais 6 meses.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     SCREEN: IMPORTAR
+============================================ -->
+<section class="screen" id="screen-importar">
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Importar Leads</h1>
+        <p class="page-subtitle">Adicione vários leads de uma vez</p>
+      </div>
+    </div>
+
+    <div class="import-grid">
+      <div class="import-card glass">
+        <h3>📤 Upload de Arquivo</h3>
+        <div class="dropzone">
+          <div class="dropzone-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="dropzone-text">Clique para selecionar arquivo</div>
+          <div class="dropzone-hint">CSV ou TXT (máx. 5MB)</div>
+        </div>
+        <div class="format-info">
+          <strong>Formato esperado:</strong>
+          Nome, Telefone, Email (opcional)<br>
+          Exemplo: João Silva, 11987654321, joao@email.com
+        </div>
+      </div>
+
+      <div class="import-card glass">
+        <h3>📋 Colar Lista Manualmente</h3>
+        <textarea class="paste-area" placeholder="João Silva, 11987654321, joao@email.com&#10;Maria Santos, 11976543210&#10;Pedro Costa, 11965432109, pedro@email.com"></textarea>
+        <div class="format-info">
+          ⓘ Cada linha vira um novo lead. Separe os dados por vírgula, ponto-e-vírgula ou tab.
+        </div>
+        <button class="import-btn">Importar Leads</button>
+      </div>
+    </div>
+
+    <div class="how-to-card glass">
+      <h3>Como usar</h3>
+      <ol class="how-to">
+        <li class="how-to__step">
+          <span class="how-to__num">1</span>
+          <strong>Formato mínimo</strong>
+          <p>Nome e Telefone obrigatórios. Email opcional.</p>
+        </li>
+        <li class="how-to__step">
+          <span class="how-to__num">2</span>
+          <strong>Separadores</strong>
+          <p>Vírgula, ponto-e-vírgula ou tab.</p>
+        </li>
+        <li class="how-to__step">
+          <span class="how-to__num">3</span>
+          <strong>Duplicidade</strong>
+          <p>O sistema verifica telefones já cadastrados.</p>
+        </li>
+        <li class="how-to__step">
+          <span class="how-to__num">4</span>
+          <strong>Status padrão</strong>
+          <p>Todos recebem o status "Novo".</p>
+        </li>
+        <li class="how-to__step">
+          <span class="how-to__num">5</span>
+          <strong>Enriquecer depois</strong>
+          <p>Edite cada lead para adicionar mais dados.</p>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     SCREEN: FUNIL
+============================================ -->
+<section class="screen" id="screen-funil">
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Funil de Vendas</h1>
+        <p class="page-subtitle">Arraste e solte os leads entre as etapas</p>
+      </div>
+    </div>
+
+    <div class="kanban stagger">
+      <div class="kanban-column" data-stage="novo">
+        <div class="kanban-column__header">
+          <span class="col-name">Novo</span>
+          <span class="col-count">1</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="mini-card">
+            <strong>Juliana Costa</strong>
+            <div class="info">📞 11954321098</div>
+            <div class="info">✉ ju.costa@email.com</div>
+            <div class="price">Cobertura · Acima R$ 1M</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban-column" data-stage="contato">
+        <div class="kanban-column__header">
+          <span class="col-name">Em Contato</span>
+          <span class="col-count">2</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="mini-card">
+            <strong>Carlos Silva</strong>
+            <div class="info">📞 11987654321</div>
+            <div class="price">Apto 2 dorms · R$ 300-400k</div>
+          </div>
+          <div class="mini-card">
+            <strong>Pedro Henrique</strong>
+            <div class="info">📞 11943210987</div>
+            <div class="price">Apto 2 dorms · R$ 350-450k</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban-column" data-stage="visita">
+        <div class="kanban-column__header">
+          <span class="col-name">Visita Agendada</span>
+          <span class="col-count">1</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="mini-card">
+            <strong>Ana Paula Santos</strong>
+            <div class="info">📞 11976543210</div>
+            <div class="price">Studio · R$ 200-300k</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban-column" data-stage="proposta">
+        <div class="kanban-column__header">
+          <span class="col-name">Proposta</span>
+          <span class="col-count">1</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="mini-card">
+            <strong>Roberto Oliveira</strong>
+            <div class="info">📞 11965432109</div>
+            <div class="price">Apto 3 dorms · R$ 500-700k</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban-column" data-stage="perdido">
+        <div class="kanban-column__header">
+          <span class="col-name">Perdido</span>
+          <span class="col-count">1</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="mini-card">
+            <strong>Marina Rodrigues</strong>
+            <div class="info">📞 11932109876</div>
+            <div class="price">Apto 1 dorm · R$ 250-350k</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="funnel-meter-card glass">
+      <h3>Estatísticas do Funil</h3>
+      <div class="funnel-meter">
+        <div class="seg" style="width:16.7%; background: var(--status-novo)">Novo<small>1 · 16.7%</small></div>
+        <div class="seg" style="width:33.3%; background: var(--status-contato)">Em Contato<small>2 · 33.3%</small></div>
+        <div class="seg" style="width:16.7%; background: var(--status-visita)">Visita<small>1 · 16.7%</small></div>
+        <div class="seg" style="width:16.7%; background: var(--status-proposta)">Proposta<small>1 · 16.7%</small></div>
+        <div class="seg" style="width:16.7%; background: var(--status-perdido)">Perdido<small>1 · 16.7%</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     SCREEN: EMPREENDIMENTOS
+============================================ -->
+<section class="screen" id="screen-empreendimentos">
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Empreendimentos</h1>
+        <p class="page-subtitle">3 empreendimentos cadastrados</p>
+      </div>
+      <button class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Empreendimento
+      </button>
+    </div>
+
+    <div class="emp-grid stagger">
+      <div class="emp-card">
+        <div class="emp-image">
+          <div class="emp-image-mock emp-1"></div>
+          <div class="tag-stack">
+            <span class="tag tag--em-obras">Em Obras</span>
+            <span class="tag tag--destaque">★ Destaque</span>
+          </div>
+        </div>
+        <div class="emp-body">
+          <div class="emp-name">Vista Park Residence</div>
+          <div class="emp-builder">Construtora Excellence</div>
+          <div class="emp-info">
+            <div>
+              <small>📍 Localização</small>
+              <div class="emp-info-value">Zona Oeste · Pinheiros</div>
+            </div>
+            <div>
+              <small>💰 Preço</small>
+              <div class="emp-price">R$ 450.000 – R$ 850.000</div>
+            </div>
+            <div>
+              <small>🏠 Tipologia</small>
+              <div class="emp-info-value">Studio, 1 e 2 dorms</div>
+            </div>
+          </div>
+          <p class="emp-desc">Empreendimento moderno com área de lazer completa, academia, piscina e coworking.</p>
+          <button class="btn-material">
+            Ver Material de Vendas
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="emp-card">
+        <div class="emp-image">
+          <div class="emp-image-mock emp-2"></div>
+          <div class="tag-stack">
+            <span class="tag tag--lancamento">Lançamento</span>
+            <span class="tag tag--destaque">★ Destaque</span>
+          </div>
+        </div>
+        <div class="emp-body">
+          <div class="emp-name">Jardim das Flores</div>
+          <div class="emp-builder">Urban Construções</div>
+          <div class="emp-info">
+            <div>
+              <small>📍 Localização</small>
+              <div class="emp-info-value">Zona Sul · Vila Mariana</div>
+            </div>
+            <div>
+              <small>💰 Preço</small>
+              <div class="emp-price">R$ 550.000 – R$ 1.200.000</div>
+            </div>
+            <div>
+              <small>🏠 Tipologia</small>
+              <div class="emp-info-value">2 e 3 dorms</div>
+            </div>
+          </div>
+          <p class="emp-desc">Localização privilegiada próximo ao metrô, com acabamento de alto padrão.</p>
+          <button class="btn-material">
+            Ver Material de Vendas
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="emp-card">
+        <div class="emp-image">
+          <div class="emp-image-mock emp-3"></div>
+          <div class="tag-stack">
+            <span class="tag tag--pronto">Pronto</span>
+          </div>
+        </div>
+        <div class="emp-body">
+          <div class="emp-name">Residencial Harmonia</div>
+          <div class="emp-builder">Construtora Premium</div>
+          <div class="emp-info">
+            <div>
+              <small>📍 Localização</small>
+              <div class="emp-info-value">Centro</div>
+            </div>
+            <div>
+              <small>💰 Preço</small>
+              <div class="emp-price">R$ 380.000 – R$ 620.000</div>
+            </div>
+            <div>
+              <small>🏠 Tipologia</small>
+              <div class="emp-info-value">1 e 2 dorms</div>
+            </div>
+          </div>
+          <p class="emp-desc">Pronto para morar, ideal para investidores. Próximo a metrô e comércio.</p>
+          <button class="btn-material">
+            Ver Material de Vendas
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     SCREEN: AGENDA
+============================================ -->
+<section class="screen" id="screen-agenda">
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Agenda</h1>
+        <p class="page-subtitle">abril de 2026</p>
+      </div>
+      <button class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Evento
+      </button>
+    </div>
+
+    <div class="agenda-grid">
+      <div class="cal-card glass">
+        <div class="cal-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Calendário
+        </div>
+        <div class="cal-grid">
+          <div class="cal-cell weekday">Dom</div>
+          <div class="cal-cell weekday">Seg</div>
+          <div class="cal-cell weekday">Ter</div>
+          <div class="cal-cell weekday">Qua</div>
+          <div class="cal-cell weekday">Qui</div>
+          <div class="cal-cell weekday">Sex</div>
+          <div class="cal-cell weekday">Sáb</div>
+
+          <div class="cal-cell"><span class="cal-day">1</span></div>
+          <div class="cal-cell"><span class="cal-day">2</span></div>
+          <div class="cal-cell"><span class="cal-day">3</span></div>
+          <div class="cal-cell"><span class="cal-day">4</span></div>
+          <div class="cal-cell"><span class="cal-day">5</span></div>
+          <div class="cal-cell"><span class="cal-day">6</span></div>
+          <div class="cal-cell"><span class="cal-day">7</span></div>
+
+          <div class="cal-cell"><span class="cal-day">8</span></div>
+          <div class="cal-cell"><span class="cal-day">9</span></div>
+          <div class="cal-cell cal-cell--today"><span class="cal-day">10</span></div>
+          <div class="cal-cell"><span class="cal-day">11</span><div class="event-pill" data-type="followup">10:30 Follow-up</div></div>
+          <div class="cal-cell"><span class="cal-day">12</span><div class="event-pill" data-type="visita">14:00 Visita Ana</div></div>
+          <div class="cal-cell"><span class="cal-day">13</span><div class="event-pill" data-type="reuniao">16:00 Reunião Rob</div></div>
+          <div class="cal-cell"><span class="cal-day">14</span></div>
+
+          <div class="cal-cell"><span class="cal-day">15</span></div>
+          <div class="cal-cell"><span class="cal-day">16</span></div>
+          <div class="cal-cell"><span class="cal-day">17</span></div>
+          <div class="cal-cell"><span class="cal-day">18</span></div>
+          <div class="cal-cell"><span class="cal-day">19</span></div>
+          <div class="cal-cell"><span class="cal-day">20</span></div>
+          <div class="cal-cell"><span class="cal-day">21</span></div>
+
+          <div class="cal-cell"><span class="cal-day">22</span></div>
+          <div class="cal-cell"><span class="cal-day">23</span></div>
+          <div class="cal-cell"><span class="cal-day">24</span></div>
+          <div class="cal-cell"><span class="cal-day">25</span></div>
+          <div class="cal-cell"><span class="cal-day">26</span></div>
+          <div class="cal-cell"><span class="cal-day">27</span></div>
+          <div class="cal-cell"><span class="cal-day">28</span></div>
+
+          <div class="cal-cell"><span class="cal-day">29</span></div>
+          <div class="cal-cell"><span class="cal-day">30</span></div>
+        </div>
+      </div>
+
+      <div class="upcoming-card glass">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Próximos Eventos
+        </h3>
+
+        <div class="event-item" data-type="followup">
+          <span class="event-type">Follow-up</span>
+          <div class="event-title">Follow-up · Carlos</div>
+          <div class="event-meta">
+            <span>📅 2026-04-11 às 10:30</span>
+            <span>👤 Carlos Silva</span>
+            <span style="color:var(--text-secondary);font-style:italic;">Verificar se ele conseguiu os documentos</span>
+          </div>
+        </div>
+
+        <div class="event-item" data-type="visita">
+          <span class="event-type">Visita</span>
+          <div class="event-title">Visita · Ana Paula</div>
+          <div class="event-meta">
+            <span>📅 2026-04-12 às 14:00</span>
+            <span>👤 Ana Paula Santos</span>
+            <span>📍 Vista Park Residence</span>
+            <span style="color:var(--text-secondary);font-style:italic;">Visita agendada para às 14h</span>
+          </div>
+        </div>
+
+        <div class="event-item" data-type="reuniao">
+          <span class="event-type">Reunião</span>
+          <div class="event-title">Reunião · Roberto (proposta)</div>
+          <div class="event-meta">
+            <span>📅 2026-04-13 às 16:00</span>
+            <span>👤 Roberto Oliveira</span>
+            <span style="color:var(--text-secondary);font-style:italic;">Apresentar proposta final</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     PREVIEW NAV (rodapé do preview)
+============================================ -->
+<nav class="preview-nav">
+  <button class="active" data-nav="dashboard">Dashboard</button>
+  <button data-nav="leads">Leads</button>
+  <button data-nav="importar">Importar</button>
+  <button data-nav="funil">Funil</button>
+  <button data-nav="empreendimentos">Empreend.</button>
+  <button data-nav="agenda">Agenda</button>
+</nav>
+
+<script>
+// ============================================
+// NAVEGAÇÃO ENTRE TELAS
+// ============================================
+const screens = document.querySelectorAll('.screen');
+const navItems = document.querySelectorAll('.nav-item');
+const previewBtns = document.querySelectorAll('.preview-nav button');
+
+function showScreen(name) {
+  screens.forEach(s => s.classList.toggle('active', s.id === 'screen-' + name));
+  navItems.forEach(n => n.classList.toggle('active', n.dataset.screen === name));
+  previewBtns.forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+  // re-trigger stagger
+  document.querySelectorAll('.stagger').forEach(el => {
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  });
+}
+navItems.forEach(n => n.addEventListener('click', () => showScreen(n.dataset.screen)));
+previewBtns.forEach(b => b.addEventListener('click', () => showScreen(b.dataset.nav)));
+
+// inicia no dashboard
+showScreen('dashboard');
+
+// ============================================
+// THEME TOGGLE
+// ============================================
+const root = document.documentElement;
+const toggle = document.getElementById('themeToggle');
+const iconSun = document.getElementById('iconSun');
+
+const moonSVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const sunSVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+
+function updateIcon() {
+  toggle.innerHTML = root.dataset.theme === 'dark' ? sunSVG : moonSVG;
+}
+
+toggle.addEventListener('click', () => {
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  updateIcon();
+});
+
+updateIcon();
+</script>
+</body>
+</html>
