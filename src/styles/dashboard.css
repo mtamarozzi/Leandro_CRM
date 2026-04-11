@@ -8,17 +8,20 @@
   content: '';
   position: absolute;
   top: -40%; right: -20%;
-  width: 180px; height: 180px;
+  width: 220px; height: 220px;
   background: radial-gradient(circle, rgba(0,223,252,.18), transparent 70%);
-  filter: blur(20px);
+  filter: blur(24px);
   pointer-events: none;
+  z-index: 0;
 }
 
-/* variations for the glow */
-.kpi-card--primary::after { background: radial-gradient(circle, rgba(0, 180, 204, 0.20), transparent 70%); }
-.kpi-card--cyan::after    { background: radial-gradient(circle, rgba(0, 223, 252, 0.20), transparent 70%); }
-.kpi-card--teal::after    { background: radial-gradient(circle, rgba(0, 140, 158, 0.20), transparent 70%); }
-.kpi-card--dark::after    { background: radial-gradient(circle, rgba(0, 95, 107, 0.20), transparent 70%); }
+.kpi-card > * { position: relative; z-index: 1; }
+
+/* variations for the glow — exact alphas from preview.html */
+.kpi-card--primary::after { background: radial-gradient(circle, rgba(0, 180, 204, 0.25), transparent 70%); }
+.kpi-card--cyan::after    { background: radial-gradient(circle, rgba(0, 223, 252, 0.28), transparent 70%); }
+.kpi-card--teal::after    { background: radial-gradient(circle, rgba(0, 140, 158, 0.22), transparent 70%); }
+.kpi-card--dark::after    { background: radial-gradient(circle, rgba(0, 95, 107, 0.22),  transparent 70%); }
 
 .kpi-icon {
   width: 44px; height: 44px;
@@ -31,7 +34,7 @@
 
 .kpi-value {
   font-family: var(--font-display);
-  font-size: var(--fs-3xl);
+  font-size: 38px;
   font-weight: 700;
   background: linear-gradient(135deg, var(--teal-900), var(--teal-500));
   -webkit-background-clip: text;
