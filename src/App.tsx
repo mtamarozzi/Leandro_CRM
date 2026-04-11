@@ -202,7 +202,7 @@ function DashboardView() {
     { name: 'Tráfego pago', value: 17 },
   ];
 
-  const COLORS = ['#005F6B', '#008C9E', '#00B4CC', '#00DFFC', '#343838', '#71717a'];
+  const COLORS = ['#00B4CC', '#00DFFC', '#343838', '#008C9E', '#8A9598', '#005F6B'];
 
   return (
     <div className="space-y-8">

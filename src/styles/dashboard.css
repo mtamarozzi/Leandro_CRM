@@ -58,8 +58,8 @@
   filter: drop-shadow(0 0 16px rgba(0, 180, 204, 0.45));
 }
 
-.pie-glow path {
-  filter: drop-shadow(0 0 6px rgba(0, 180, 204, 0.4));
+.pie-glow {
+  filter: drop-shadow(0 0 16px rgba(0, 180, 204, 0.3));
 }
 
 /* Property Mini Card in Dashboard */
