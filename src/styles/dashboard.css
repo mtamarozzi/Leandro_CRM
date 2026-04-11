@@ -71,14 +71,42 @@
   border-radius: var(--radius-md);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--teal-500);
+  border-left: 3px solid var(--teal-500);
   margin-bottom: 0.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.prop-mini-card:nth-child(even) {
-  border-left-color: var(--cyan-300);
+.prop-mini-card:hover {
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(0, 180, 204, 0.12);
 }
 
-.prop-mini-card:nth-child(3n) {
-  border-left-color: var(--teal-700);
+.prop-mini-card:nth-child(3n+1) { border-left-color: var(--teal-500); }
+.prop-mini-card:nth-child(3n+2) { border-left-color: var(--cyan-300); }
+.prop-mini-card:nth-child(3n)   { border-left-color: var(--teal-700); }
+
+/* Glass pill for lead count on dashboard property rows */
+.lead-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal-700);
+  background: rgba(0, 180, 204, 0.1);
+  border: 1px solid rgba(0, 180, 204, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 180, 204, 0.12);
+}
+
+[data-theme="dark"] .lead-pill {
+  color: var(--cyan-300);
+  background: rgba(0, 223, 252, 0.08);
+  border-color: rgba(0, 223, 252, 0.3);
 }

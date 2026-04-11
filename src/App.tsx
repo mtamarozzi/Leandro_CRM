@@ -323,9 +323,9 @@ function DashboardView() {
                   <h4 className="font-semibold text-sm">{prop.name}</h4>
                   <p className="text-[11px] text-muted-foreground">{prop.region}</p>
                 </div>
-                <div className="flex flex-col items-end">
-                  <div className="badge badge--novo scale-90 px-3">0</div>
-                  <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest mt-1">Leads</p>
+                <div className="lead-pill">
+                  <span>0</span>
+                  <span>Leads</span>
                 </div>
               </div>
             ))}
