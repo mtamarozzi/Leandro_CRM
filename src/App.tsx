@@ -472,85 +472,102 @@ function ImportView() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <Card className="border-none shadow-sm">
+        <GlassCard className="border-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" /> Upload de Arquivo
+            <CardTitle className="font-display flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" /> Upload de Arquivo
             </CardTitle>
             <CardDescription>Faça upload de um arquivo .CSV ou .TXT com seus leads</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 flex flex-col items-center justify-center gap-4 hover:border-primary transition-colors cursor-pointer bg-slate-50">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <div className="dropzone">
+              <div className="dropzone-icon">
                 <Upload size={24} />
               </div>
-              <div className="text-center">
-                <p className="font-medium">Clique para selecionar arquivo</p>
-                <p className="text-xs text-muted-foreground">CSV ou TXT (máx. 5MB)</p>
+              <div className="text-center relative z-10">
+                <p className="font-semibold text-foreground">Clique para selecionar arquivo</p>
+                <p className="text-xs text-muted-foreground mt-1">CSV ou TXT (máx. 5MB)</p>
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+            <div className="mt-6 p-4 bg-background/50 rounded-lg border border-border/50 backdrop-blur-sm">
               <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                <Bell className="h-4 w-4" /> Formato esperado:
+                <Bell className="h-4 w-4 text-primary" /> Formato esperado:
               </h4>
               <p className="text-xs text-muted-foreground">
                 Nome, Telefone, Email (opcional)<br />
-                Exemplo: João Silva, 11987654321, joao@email.com
+                <span className="font-mono mt-1 block">Exemplo: João Silva, 11987654321, joao@email.com</span>
               </p>
             </div>
           </CardContent>
-        </Card>
+        </GlassCard>
 
-        <Card className="border-none shadow-sm">
+        <GlassCard className="border-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" /> Colar Lista Manualmente
+            <CardTitle className="font-display flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" /> Colar Lista Manualmente
             </CardTitle>
             <CardDescription>Cole uma lista de leads (um por linha)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <textarea 
-              className="w-full h-[200px] p-4 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-primary outline-none text-sm font-mono"
+              className="paste-area"
               placeholder="João Silva, 11987654321, joao@email.com&#10;Maria Santos, 11976543210&#10;Pedro Costa, 11965432109, pedro@email.com"
             />
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+            <div className="p-4 bg-background/50 rounded-lg border border-border/50 backdrop-blur-sm">
               <p className="text-xs text-muted-foreground flex items-center gap-2">
-                <Bell className="h-4 w-4" /> Cada linha vira um novo lead. Separe os dados por vírgula, ponto e vírgula ou tab.
+                <Bell className="h-4 w-4 text-primary shrink-0" /> Cada linha vira um novo lead. Separe os dados por vírgula, ponto e vírgula ou tab.
               </p>
             </div>
-            <Button className="w-full bg-primary">Importar Leads</Button>
+            <BtnPrimary className="w-full">Importar Leads</BtnPrimary>
           </CardContent>
-        </Card>
+        </GlassCard>
       </div>
 
-      <Card className="border-none shadow-sm">
+      <GlassCard className="border-none">
         <CardHeader>
-          <CardTitle>Como usar</CardTitle>
+          <CardTitle className="font-display">Como usar</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          <div className="space-y-1">
-            <p className="font-semibold">1. Formato mínimo:</p>
-            <p className="text-muted-foreground">Nome e Telefone são obrigatórios. Email é opcional.</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-semibold">2. Separadores aceitos:</p>
-            <p className="text-muted-foreground">Vírgula (,), ponto e vírgula (;) ou Tab</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-semibold">3. Detecção de duplicidade:</p>
-            <p className="text-muted-foreground">O sistema verifica telefones já cadastrados e alerta você antes de importar.</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-semibold">4. Status padrão:</p>
-            <p className="text-muted-foreground">Todos os leads importados recebem o status "Novo" automaticamente.</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-semibold">5. Enriquecimento posterior:</p>
-            <p className="text-muted-foreground">Você pode editar os leads depois para adicionar mais informações (região, faixa de valor, etc).</p>
-          </div>
+        <CardContent>
+          <ol className="how-to">
+            <li className="how-to__step">
+              <span className="how-to__num">1</span>
+              <div>
+                <strong className="text-sm">Formato mínimo</strong>
+                <p className="text-xs text-muted-foreground mt-1">Nome e Telefone são obrigatórios. Email é opcional.</p>
+              </div>
+            </li>
+            <li className="how-to__step">
+              <span className="how-to__num">2</span>
+              <div>
+                <strong className="text-sm">Separadores aceitos</strong>
+                <p className="text-xs text-muted-foreground mt-1">Vírgula (,), ponto e vírgula (;) ou Tab</p>
+              </div>
+            </li>
+            <li className="how-to__step">
+              <span className="how-to__num">3</span>
+              <div>
+                <strong className="text-sm">Detecção de duplicidade</strong>
+                <p className="text-xs text-muted-foreground mt-1">O sistema verifica telefones já cadastrados e alerta você antes de importar.</p>
+              </div>
+            </li>
+            <li className="how-to__step">
+              <span className="how-to__num">4</span>
+              <div>
+                <strong className="text-sm">Status padrão</strong>
+                <p className="text-xs text-muted-foreground mt-1">Todos os leads importados recebem o status "Novo" automaticamente.</p>
+              </div>
+            </li>
+            <li className="how-to__step">
+              <span className="how-to__num">5</span>
+              <div>
+                <strong className="text-sm">Enriquecimento posterior</strong>
+                <p className="text-xs text-muted-foreground mt-1">Você pode editar os leads depois para adicionar mais informações (região, faixa de valor, etc).</p>
+              </div>
+            </li>
+          </ol>
         </CardContent>
-      </Card>
+      </GlassCard>
     </div>
   );
 }

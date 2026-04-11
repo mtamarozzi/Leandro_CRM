@@ -1,0 +1,96 @@
+.dropzone {
+  padding: 3rem 2rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 2px dashed var(--border-strong);
+  text-align: center;
+  cursor: pointer;
+  transition: all .3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropzone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 223, 252, 0.1), transparent 60%);
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.dropzone:hover::before,
+.dropzone.drag-over::before { 
+  opacity: 1; 
+}
+
+.dropzone.drag-over {
+  border-color: var(--cyan-300);
+  border-style: solid;
+  box-shadow: 0 0 0 4px rgba(0, 223, 252, 0.15);
+}
+
+.dropzone-icon {
+  width: 64px; height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-700), var(--cyan-300));
+  display: grid; place-items: center;
+  color: white;
+  box-shadow: 0 8px 24px rgba(0, 180, 204, 0.4);
+}
+
+.paste-area {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--fs-sm);
+  min-height: 180px;
+  width: 100%;
+  resize: vertical;
+}
+
+.paste-area:focus {
+  outline: none;
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 3px rgba(0, 180, 204, 0.15);
+}
+
+[data-theme="dark"] .paste-area {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.how-to {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.how-to__step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.how-to__num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-500));
+  color: white;
+  display: grid; place-items: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 95, 107, 0.3);
+}
+
+[data-theme="dark"] .how-to__num {
+  background: linear-gradient(135deg, var(--teal-500), var(--cyan-300));
+  color: var(--teal-900);
+  box-shadow: 0 4px 12px rgba(0, 223, 252, 0.2);
+}
