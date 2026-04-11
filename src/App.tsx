@@ -30,6 +30,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/glass-card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { BtnWhatsapp } from '@/components/ui/btn-whatsapp';
+import { BtnPrimary } from '@/components/ui/btn-primary';
 import { 
   Select, 
   SelectContent, 
@@ -342,16 +345,28 @@ function LeadsView() {
     lead.phone.includes(searchTerm)
   );
 
+  const statusToSlug = (status: string) => {
+    const map: Record<string, string> = {
+      'Novo': 'novo',
+      'Em Contato': 'contato',
+      'Visita Agendada': 'visita',
+      'Proposta': 'proposta',
+      'Perdido': 'perdido',
+      'Ganho': 'ganho'
+    };
+    return map[status] || 'novo';
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Leads</h2>
+          <h2 className="text-3xl font-display font-bold tracking-tight">Leads</h2>
           <p className="text-muted-foreground">{mockLeads.length} leads encontrados</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <BtnPrimary>
           <Plus className="mr-2 h-4 w-4" /> Novo Lead
-        </Button>
+        </BtnPrimary>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
@@ -390,58 +405,58 @@ function LeadsView() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredLeads.map((lead) => (
-          <Card key={lead.id} className="border-none shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
+          <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(0,180,204,0.12)] transition-all duration-300" data-status={statusToSlug(lead.status)}>
+            <CardHeader className="pb-2 px-0 pt-0">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg">{lead.name}</CardTitle>
-                  <Badge variant="secondary" className="mt-1 bg-primary/10 text-primary border-none">
-                    {lead.status}
-                  </Badge>
+                  <CardTitle className="text-lg font-display">{lead.name}</CardTitle>
+                  <StatusBadge status={lead.status} className="mt-2" />
                 </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                <div className="flex gap-1 -mt-1 -mr-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/50 dark:hover:bg-black/20">
                     <Settings className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-0 pb-0">
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone size={14} /> {lead.phone}
+                  <Phone size={14} className="text-primary/70" /> 
+                  <span className="font-medium text-foreground/80">{lead.phone}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Mail size={14} /> {lead.email}
+                  <Mail size={14} className="text-primary/70" /> 
+                  <span className="font-medium text-foreground/80">{lead.email}</span>
                 </div>
-                <div className="pt-2">
-                  <span className="font-semibold">Interesse:</span> {lead.interest}
+                <div className="pt-2 text-muted-foreground">
+                  Interesse: <span className="font-medium text-foreground">{lead.interest}</span>
                 </div>
-                <div>
-                  <span className="font-semibold">Faixa:</span> {lead.valueRange}
+                <div className="text-muted-foreground">
+                  Faixa: <span className="font-medium text-foreground">{lead.valueRange}</span>
                 </div>
-                <div>
-                  <span className="font-semibold">Região:</span> {lead.region}
+                <div className="text-muted-foreground">
+                  Região: <span className="font-medium text-foreground">{lead.region}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-                  <CalendarIcon size={12} /> Último contato: {lead.lastContact}
+                  <CalendarIcon size={12} className="text-primary/50" /> Último contato: {lead.lastContact}
                 </div>
               </div>
 
               {lead.notes && (
-                <div className="bg-slate-50 p-3 rounded-lg text-xs italic text-muted-foreground">
-                  <MessageSquare size={12} className="inline mr-1" /> {lead.notes}
+                <div className="bg-foreground/5 backdrop-blur-sm p-3 rounded-lg text-xs italic text-muted-foreground border border-border/50">
+                  <MessageSquare size={12} className="inline mr-1 text-primary/50" /> {lead.notes}
                 </div>
               )}
 
-              <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none">
+              <BtnWhatsapp className="w-full">
                 <MessageSquare className="mr-2 h-4 w-4" /> WhatsApp
-              </Button>
+              </BtnWhatsapp>
             </CardContent>
-          </Card>
+          </GlassCard>
         ))}
       </div>
     </div>

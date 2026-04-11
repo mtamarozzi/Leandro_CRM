@@ -1,0 +1,30 @@
+.lead-card {
+  position: relative;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+}
+
+.lead-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 16px; bottom: 16px;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--status-color, var(--teal-500));
+  box-shadow: 0 0 12px var(--status-color, var(--teal-500));
+}
+
+.lead-card[data-status="novo"]     { --status-color: var(--status-novo);     }
+.lead-card[data-status="contato"]  { --status-color: var(--status-contato);  }
+.lead-card[data-status="visita"]   { --status-color: var(--status-visita);   }
+.lead-card[data-status="proposta"] { --status-color: var(--status-proposta); }
+.lead-card[data-status="perdido"]  { 
+  --status-color: var(--status-perdido);
+  opacity: 0.7; 
+  filter: grayscale(0.4);
+  transition: all 0.3s ease;
+}
+
+.lead-card[data-status="perdido"]:hover { 
+  opacity: 1; 
+  filter: grayscale(0);
+}
