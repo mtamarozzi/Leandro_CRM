@@ -1,19 +1,24 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Button, ButtonProps } from '@/components/ui/button';
 
-export function BtnWhatsapp({ className, children, ...props }: ButtonProps) {
+type BtnWhatsappProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+export function BtnWhatsapp({ className, children, ...props }: BtnWhatsappProps) {
   return (
-    <Button 
-      variant="outline"
-      size="sm"
+    <button
+      type="button"
       className={cn(
-        'border-[#25D366]/30 text-[#25D366] bg-[#25D366]/10 hover:bg-[#25D366] hover:text-white transition-colors duration-300 font-medium', 
+        'flex items-center justify-center gap-2 w-full py-2 rounded-full',
+        'bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/35',
+        'font-semibold text-xs uppercase tracking-wide',
+        'hover:bg-[#25D366] hover:text-white',
+        'hover:shadow-[0_0_16px_rgba(37,211,102,0.5)]',
+        'transition-all duration-300',
         className
-      )} 
+      )}
       {...props}
     >
       {children}
-    </Button>
+    </button>
   );
 }
