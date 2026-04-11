@@ -726,118 +726,81 @@ function PropertiesView() {
 }
 
 function AgendaView() {
+  const typeMap = (type: string) => {
+    if (type === 'Follow-up') return 'followup';
+    if (type === 'Visita') return 'visita';
+    if (type === 'Reunião') return 'reuniao';
+    return type.toLowerCase();
+  };
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="page">
+      <div className="page-header">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Agenda</h2>
-          <p className="text-muted-foreground">abril de 2026</p>
+          <h1 className="page-title">Agenda</h1>
+          <p className="page-subtitle">abril de 2026</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="bg-white border-none shadow-sm">Anterior</Button>
-          <Button variant="outline" className="bg-white border-none shadow-sm">Hoje</Button>
-          <Button variant="outline" className="bg-white border-none shadow-sm">Próximo</Button>
-          <Button className="bg-primary hover:bg-primary/90 ml-2">
-            <Plus className="mr-2 h-4 w-4" /> Novo Evento
-          </Button>
-        </div>
+        <BtnPrimary>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Evento
+        </BtnPrimary>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2 border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" /> Calendário
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden border border-slate-200">
-              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
-                <div key={day} className="bg-slate-50 p-2 text-center text-[10px] font-bold uppercase text-muted-foreground">
-                  {day}
-                </div>
-              ))}
-              {Array.from({ length: 30 }).map((_, i) => {
-                const day = i + 1;
-                const hasEvent = mockEvents.some(e => e.date === `2026-04-${day.toString().padStart(2, '0')}`);
-                return (
-                  <div 
-                    key={i} 
-                    className={`bg-white min-h-[100px] p-2 border-t border-l border-slate-100 transition-colors hover:bg-slate-50 cursor-pointer ${
-                      day === 10 ? 'ring-2 ring-primary ring-inset bg-primary/5' : ''
-                    }`}
-                  >
-                    <span className={`text-sm font-medium ${day === 10 ? 'text-primary' : 'text-slate-600'}`}>
-                      {day}
-                    </span>
-                    {hasEvent && (
-                      <div className="mt-1 space-y-1">
-                        {mockEvents.filter(e => e.date === `2026-04-${day.toString().padStart(2, '0')}`).map(e => (
-                          <div 
-                            key={e.id} 
-                            className={`text-[9px] p-1 rounded border-l-2 truncate ${
-                              e.type === 'Follow-up' ? 'bg-yellow-50 border-yellow-400 text-yellow-700' :
-                              e.type === 'Visita' ? 'bg-purple-50 border-purple-400 text-purple-700' :
-                              'bg-blue-50 border-blue-400 text-blue-700'
-                            }`}
-                          >
-                            {e.time} {e.title}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="border-none shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" /> Próximos Eventos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockEvents.map((event) => (
-                <div key={event.id} className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2 relative group">
-                  <div className="flex justify-between items-start">
-                    <Badge className={`${
-                      event.type === 'Follow-up' ? 'bg-yellow-100 text-yellow-700' :
-                      event.type === 'Visita' ? 'bg-purple-100 text-purple-700' :
-                      'bg-blue-100 text-blue-700'
-                    } border-none text-[10px]`}>
-                      {event.type}
-                    </Badge>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <Settings className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive">
-                        <X className="h-3 w-3" />
-                      </Button>
+      <div className="agenda-grid stagger">
+        <GlassCard className="cal-card border-none" data-glow="1">
+          <div className="cal-head">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Calendário
+          </div>
+          <div className="cal-grid">
+            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
+              <div key={day} className="cal-cell weekday">{day}</div>
+            ))}
+            {Array.from({ length: 30 }).map((_, i) => {
+              const day = i + 1;
+              const isToday = day === 10;
+              const hasEvent = mockEvents.some(e => e.date === `2026-04-${day.toString().padStart(2, '0')}`);
+              return (
+                <div key={i} className={`cal-cell ${isToday ? 'cal-cell--today' : ''}`}>
+                  <span className="cal-day">{day}</span>
+                  {hasEvent && mockEvents.filter(e => e.date === `2026-04-${day.toString().padStart(2, '0')}`).map(e => (
+                    <div key={e.id} className="event-pill" data-type={typeMap(e.type)}>
+                      {e.time} {e.title}
                     </div>
-                  </div>
-                  <h4 className="font-bold text-sm">{event.title}</h4>
-                  <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><CalendarIcon size={10} /> {event.date} às {event.time}</span>
-                    <span className="flex items-center gap-1"><Users size={10} /> {mockLeads.find(l => l.id === event.leadId)?.name}</span>
-                    {event.propertyId && (
-                      <span className="flex items-center gap-1"><Building2 size={10} /> {mockProperties.find(p => p.id === event.propertyId)?.name}</span>
-                    )}
-                  </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </GlassCard>
+
+        <GlassCard className="upcoming-card border-none" data-glow="2">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Próximos Eventos
+          </h3>
+
+          {mockEvents.slice(0, 3).map((event) => {
+            const lead = mockLeads.find(l => l.id === event.leadId);
+            const property = mockProperties.find(p => p.id === event.propertyId);
+            return (
+              <div key={event.id} className="event-item" data-type={typeMap(event.type)}>
+                <span className="event-type">{event.type}</span>
+                <div className="event-title">{event.title}</div>
+                <div className="event-meta">
+                  <span>📅 {event.date} às {event.time}</span>
+                  <span>👤 {lead?.name}</span>
+                  {property && (
+                    <span>📍 {property.name}</span>
+                  )}
                   {event.notes && (
-                    <p className="text-[10px] italic text-muted-foreground pt-1 border-t border-slate-200">
-                      {event.notes}
-                    </p>
+                    <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>{event.notes}</span>
                   )}
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            );
+          })}
+        </GlassCard>
       </div>
     </div>
   );
