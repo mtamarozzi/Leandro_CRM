@@ -266,17 +266,17 @@ function DashboardView() {
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#00DFFC" />
-                    <stop offset="100%" stopColor="#005F6B" />
+                    <stop offset="100%" stopColor="#008C9E" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0, 223, 252, 0.2)', boxShadow: 'var(--shadow-md)', background: 'var(--surface)', backdropFilter: 'blur(10px)' }}
                   cursor={{ fill: 'rgba(0, 95, 107, 0.05)' }}
                 />
-                <Bar dataKey="value" fill="url(#barGradient)" radius={[6, 6, 0, 0]} className="dashboard-bar-chart" />
+                <Bar dataKey="value" fill="url(#barGradient)" radius={[8, 8, 4, 4]} className="dashboard-bar-chart" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
