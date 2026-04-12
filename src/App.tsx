@@ -93,11 +93,11 @@ export default function App() {
       {/* Header */}
       <header className="topbar">
         <div className="logo-wrapper">
-          <div className="logo-mark">LA</div>
-          <div>
-            <div className="logo-sub">creci 300771-F</div>
-            <div className="logo-text">LEANDRO ALONSO</div>
-          </div>
+          <img
+            src="/imagens/logo-preta.png"
+            alt="Leandro Alonso — Corretor de Imóveis"
+            className="logo-img"
+          />
         </div>
 
         {/* Desktop Nav */}
