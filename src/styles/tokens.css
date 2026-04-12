@@ -166,6 +166,38 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .badge--perdido  { background: rgba(111, 111, 111, 0.15); color: var(--status-perdido); border: 1px solid rgba(111, 111, 111, 0.3); }
 
 /* Buttons */
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.75rem;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-theme="dark"] .page-title {
+  background: linear-gradient(135deg, var(--cyan-300), var(--teal-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  margin-top: 0.25rem;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--teal-700) 0%, var(--teal-500) 100%);
   color: white;

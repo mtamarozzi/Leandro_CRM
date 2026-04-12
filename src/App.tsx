@@ -745,7 +745,7 @@ function AgendaView() {
 
   return (
     <div className="page">
-      <div className="page-header flex justify-between items-end mb-7">
+      <div className="page-header">
         <div>
           <h1 className="page-title">Agenda</h1>
           <p className="page-subtitle">abril de 2026</p>
