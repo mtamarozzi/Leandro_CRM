@@ -188,6 +188,32 @@ h1, h2, h3, h4, h5, h6, .font-display {
   box-shadow: 0 6px 16px rgba(212, 160, 23, 0.4);
 }
 
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--surface-strong);
+}
+.btn-secondary.active {
+  background: linear-gradient(135deg, var(--teal-900), var(--teal-700));
+  color: white;
+  border-color: transparent;
+}
+
 /* ============================================
    POLIMENTO & ACESSIBILIDADE
 ============================================ */

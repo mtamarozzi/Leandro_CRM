@@ -745,15 +745,20 @@ function AgendaView() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header flex justify-between items-end mb-7">
         <div>
           <h1 className="page-title">Agenda</h1>
           <p className="page-subtitle">abril de 2026</p>
         </div>
-        <BtnPrimary>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Novo Evento
-        </BtnPrimary>
+        <div className="flex items-center gap-2">
+          <button className="btn-secondary">Anterior</button>
+          <button className="btn-secondary">Hoje</button>
+          <button className="btn-secondary">Próximo</button>
+          <BtnPrimary className="ml-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Evento
+          </BtnPrimary>
+        </div>
       </div>
 
       <div className="agenda-grid stagger">
