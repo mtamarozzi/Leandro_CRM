@@ -13,7 +13,7 @@
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgba(0, 223, 252, 0.18);
+  box-shadow: 0 1px 0 rgba(212, 160, 23, 0.18);
 }
 @media (max-width: 1024px) {
   .topbar {
@@ -31,7 +31,7 @@
   content: '';
   position: absolute;
   inset: -30% -20%;
-  background: radial-gradient(ellipse at center, rgba(0,223,252,0.35), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(212,160,23,0.25), transparent 70%);
   filter: blur(20px);
   z-index: -1;
 }
@@ -45,9 +45,9 @@
   transition: all .4s;
 }
 [data-theme="dark"] .logo-mark,
-.dark .logo-mark { 
-  color: var(--cyan-300); 
-  border-color: var(--cyan-300); 
+.dark .logo-mark {
+  color: var(--cyan-300);
+  border-color: var(--cyan-300);
 }
 
 .logo-text {
@@ -59,8 +59,8 @@
   line-height: 1;
 }
 [data-theme="dark"] .logo-text,
-.dark .logo-text { 
-  color: var(--text-primary); 
+.dark .logo-text {
+  color: var(--text-primary);
 }
 .logo-sub {
   font-size: 9px;
@@ -68,6 +68,18 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-top: 3px;
+}
+
+.logo-img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  transition: filter 0.4s ease;
+}
+
+/* Dark mode: inverte a logo preta pra branca */
+[data-theme="dark"] .logo-img {
+  filter: invert(1) brightness(1.1);
 }
 
 .nav {
@@ -91,15 +103,15 @@
 }
 .nav-item:hover {
   color: var(--text-primary);
-  background: rgba(0, 180, 204, 0.08);
+  background: rgba(212, 160, 23, 0.08);
 }
 .nav-item.active {
   color: var(--teal-900);
-  background: linear-gradient(135deg, rgba(0,223,252,0.18), rgba(0,180,204,0.10));
-  border-color: rgba(0, 180, 204, 0.4);
+  background: linear-gradient(135deg, rgba(232,197,71,0.18), rgba(212,160,23,0.10));
+  border-color: rgba(212, 160, 23, 0.4);
   box-shadow:
-    0 0 0 1px rgba(0, 223, 252, 0.2) inset,
-    0 4px 16px rgba(0, 180, 204, 0.22);
+    0 0 0 1px rgba(232, 197, 71, 0.2) inset,
+    0 4px 16px rgba(212, 160, 23, 0.22);
 }
 [data-theme="dark"] .nav-item.active,
 .dark .nav-item.active {

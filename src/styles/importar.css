@@ -15,20 +15,20 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(0, 223, 252, 0.1), transparent 60%);
+  background: radial-gradient(circle at 50% 50%, rgba(232, 197, 71, 0.1), transparent 60%);
   opacity: 0;
   transition: opacity .3s;
 }
 
 .dropzone:hover::before,
-.dropzone.drag-over::before { 
-  opacity: 1; 
+.dropzone.drag-over::before {
+  opacity: 1;
 }
 
 .dropzone.drag-over {
   border-color: var(--cyan-300);
   border-style: solid;
-  box-shadow: 0 0 0 4px rgba(0, 223, 252, 0.15);
+  box-shadow: 0 0 0 4px rgba(232, 197, 71, 0.15);
 }
 
 .dropzone-icon {
@@ -38,14 +38,14 @@
   background: linear-gradient(135deg, var(--teal-700), var(--cyan-300));
   display: grid; place-items: center;
   color: white;
-  box-shadow: 0 8px 24px rgba(0, 180, 204, 0.4);
+  box-shadow: 0 8px 24px rgba(212, 160, 23, 0.4);
 }
 
-/* Info box with left teal accent (Formato esperado, etc) */
+/* Info box with left accent */
 .info-box {
   padding: 1rem 1rem 1rem 1.15rem;
   border-radius: var(--radius-md);
-  background: rgba(0, 180, 204, 0.06);
+  background: rgba(212, 160, 23, 0.06);
   border: 1px solid var(--border);
   border-left: 3px solid var(--teal-500);
   backdrop-filter: blur(8px);
@@ -53,7 +53,7 @@
 }
 
 [data-theme="dark"] .info-box {
-  background: rgba(0, 223, 252, 0.05);
+  background: rgba(232, 197, 71, 0.05);
   border-left-color: var(--cyan-300);
 }
 
@@ -72,7 +72,7 @@
 .paste-area:focus {
   outline: none;
   border-color: var(--teal-500);
-  box-shadow: 0 0 0 3px rgba(0, 180, 204, 0.15);
+  box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.15);
 }
 
 [data-theme="dark"] .paste-area {
@@ -93,7 +93,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 14px;
-  background: rgba(0, 180, 204, 0.04);
+  background: rgba(212, 160, 23, 0.04);
   border-radius: 10px;
   border: 1px solid var(--border);
 }
@@ -107,11 +107,11 @@
   font-family: var(--font-display);
   font-weight: 600;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 95, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(139, 105, 20, 0.3);
 }
 
 [data-theme="dark"] .how-to__num {
   background: linear-gradient(135deg, var(--teal-500), var(--cyan-300));
   color: var(--teal-900);
-  box-shadow: 0 4px 12px rgba(0, 223, 252, 0.2);
+  box-shadow: 0 4px 12px rgba(232, 197, 71, 0.2);
 }

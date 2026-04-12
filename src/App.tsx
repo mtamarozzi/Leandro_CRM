@@ -209,7 +209,7 @@ function DashboardView() {
     { name: 'Tráfego pago', value: 17 },
   ];
 
-  const COLORS = ['#00B4CC', '#00DFFC', '#343838', '#008C9E', '#8A9598', '#005F6B'];
+  const COLORS = ['#D4A017', '#E8C547', '#1F1F1F', '#B8860B', '#808080', '#8B6914'];
 
   return (
     <div className="space-y-8">
@@ -272,16 +272,16 @@ function DashboardView() {
               <BarChart data={funnelData}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00DFFC" />
-                    <stop offset="100%" stopColor="#008C9E" />
+                    <stop offset="0%" stopColor="#E8C547" />
+                    <stop offset="100%" stopColor="#B8860B" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0, 223, 252, 0.2)', boxShadow: 'var(--shadow-md)', background: 'var(--surface)', backdropFilter: 'blur(10px)' }}
-                  cursor={{ fill: 'rgba(0, 95, 107, 0.05)' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(232, 197, 71, 0.2)', boxShadow: 'var(--shadow-md)', background: 'var(--surface)', backdropFilter: 'blur(10px)' }}
+                  cursor={{ fill: 'rgba(139, 105, 20, 0.05)' }}
                 />
                 <Bar dataKey="value" fill="url(#barGradient)" radius={[8, 8, 4, 4]} className="dashboard-bar-chart" />
               </BarChart>
@@ -310,7 +310,7 @@ function DashboardView() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0, 223, 252, 0.2)', backgroundColor: 'var(--surface-solid)' }} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid rgba(232, 197, 71, 0.2)', backgroundColor: 'var(--surface-solid)' }} />
                 <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }}/>
               </RePieChart>
             </ResponsiveContainer>
@@ -411,7 +411,7 @@ function LeadsView() {
 
       <div className="leads-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger">
         {filteredLeads.map((lead) => (
-          <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(0,180,204,0.12)] transition-all duration-300" data-status={statusToSlug(lead.status)}>
+          <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(212,160,23,0.12)] transition-all duration-300" data-status={statusToSlug(lead.status)}>
             <CardHeader className="pb-2 px-0 pt-0">
               <div className="flex justify-between items-start">
                 <div>

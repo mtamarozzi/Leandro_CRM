@@ -31,17 +31,17 @@
   width: 4px;
   border-top-left-radius: var(--radius-lg);
   border-bottom-left-radius: var(--radius-lg);
-  background: var(--status-color, #00B4CC);
-  box-shadow: 0 0 12px var(--status-color, #00B4CC);
+  background: var(--status-color, #D4A017);
+  box-shadow: 0 0 12px var(--status-color, #D4A017);
   pointer-events: none;
 }
 
-.lead-card[data-status="novo"]     { --status-color: #00B4CC; }
-.lead-card[data-status="contato"]  { --status-color: #00DFFC; }
-.lead-card[data-status="visita"]   { --status-color: #008C9E; }
-.lead-card[data-status="proposta"] { --status-color: #005F6B; }
+.lead-card[data-status="novo"]     { --status-color: #D4A017; }
+.lead-card[data-status="contato"]  { --status-color: #E8C547; }
+.lead-card[data-status="visita"]   { --status-color: #B8860B; }
+.lead-card[data-status="proposta"] { --status-color: #8B6914; }
 .lead-card[data-status="perdido"]  {
-  --status-color: #6B7280;
+  --status-color: #6F6F6F;
   opacity: 0.7;
   transition: opacity 0.3s ease;
 }
