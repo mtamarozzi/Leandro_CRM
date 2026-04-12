@@ -411,55 +411,58 @@ function LeadsView() {
 
       <div className="leads-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger">
         {filteredLeads.map((lead) => (
-          <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(212,160,23,0.12)] transition-all duration-300" data-status={statusToSlug(lead.status)}>
-            <CardHeader className="pb-2 px-0 pt-0">
+          <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(212,160,23,0.12)] transition-all duration-300 p-5 pl-6" data-status={statusToSlug(lead.status)}>
+            <CardHeader className="pb-1 px-0 pt-0">
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg font-display">{lead.name}</CardTitle>
-                  <StatusBadge status={lead.status} className="mt-2" />
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base font-display">{lead.name}</CardTitle>
+                  <StatusBadge status={lead.status} className="text-[10px] px-2.5 py-1" />
                 </div>
                 <div className="flex gap-1 -mt-1 -mr-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/50 dark:hover:bg-black/20">
-                    <Settings className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-white/50 dark:hover:bg-black/20">
+                    <Settings className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10">
-                    <X className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10">
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 px-0 pb-0">
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone size={14} className="text-primary/70" /> 
+            <CardContent className="space-y-2 px-0 pb-0 mt-2">
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Phone size={12} className="text-primary/70" />
                   <span className="font-medium text-foreground/80">{lead.phone}</span>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Mail size={14} className="text-primary/70" /> 
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Mail size={12} className="text-primary/70" />
                   <span className="font-medium text-foreground/80">{lead.email}</span>
                 </div>
-                <div className="pt-2 text-muted-foreground">
-                  Interesse: <span className="font-medium text-foreground">{lead.interest}</span>
+                <div className="flex gap-1.5 text-xs text-secondary pt-1">
+                  <span className="w-[70px] text-muted-foreground">Interesse:</span>
+                  <strong className="text-foreground font-semibold">{lead.interest}</strong>
                 </div>
-                <div className="text-muted-foreground">
-                  Faixa: <span className="font-medium text-foreground">{lead.valueRange}</span>
+                <div className="flex gap-1.5 text-xs text-secondary">
+                  <span className="w-[70px] text-muted-foreground">Faixa:</span>
+                  <strong className="text-foreground font-semibold">{lead.valueRange}</strong>
                 </div>
-                <div className="text-muted-foreground">
-                  Região: <span className="font-medium text-foreground">{lead.region}</span>
+                <div className="flex gap-1.5 text-xs text-secondary">
+                  <span className="w-[70px] text-muted-foreground">Região:</span>
+                  <strong className="text-foreground font-semibold">{lead.region}</strong>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-                  <CalendarIcon size={12} className="text-primary/50" /> Último contato: {lead.lastContact}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1">
+                  <CalendarIcon size={11} className="text-primary/50" /> Último contato: {lead.lastContact}
                 </div>
               </div>
 
               {lead.notes && (
-                <div className="bg-foreground/5 backdrop-blur-sm p-3 rounded-lg text-xs italic text-muted-foreground border border-border/50">
-                  <MessageSquare size={12} className="inline mr-1 text-primary/50" /> {lead.notes}
+                <div className="bg-foreground/5 backdrop-blur-sm p-2 rounded-lg text-[11px] italic text-muted-foreground border border-border/50">
+                  <MessageSquare size={10} className="inline mr-1 text-primary/50" /> {lead.notes}
                 </div>
               )}
 
-              <BtnWhatsapp className="w-full">
-                <MessageSquare className="mr-2 h-4 w-4" /> WhatsApp
+              <BtnWhatsapp className="w-full mt-3">
+                <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> WhatsApp
               </BtnWhatsapp>
             </CardContent>
           </GlassCard>
