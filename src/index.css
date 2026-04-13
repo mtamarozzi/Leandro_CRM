@@ -7,6 +7,7 @@
 @import "./styles/funil.css";
 @import "./styles/empreendimentos.css";
 @import "./styles/agenda.css";
+@import "./styles/auth.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";

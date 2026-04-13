@@ -21,9 +21,13 @@ import {
   Star,
   PieChart,
   Sun,
-  Moon
+  Moon,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from '@tanstack/react-router';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { useCurrentProfile } from '@/src/hooks/useCurrentProfile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -57,6 +61,19 @@ import { mockLeads, mockProperties, mockEvents } from './mockData';
 import { Lead, Property, Event, LeadStatus } from './types';
 
 export default function App() {
+  const { signOut } = useAuth();
+  const { profile } = useCurrentProfile();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate({ to: '/login' });
+    } catch (error) {
+      console.error('[App] Erro ao sair:', error);
+    }
+  };
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -125,7 +142,17 @@ export default function App() {
           <button className="icon-btn" aria-label="Notificações">
             <Bell size={18} />
           </button>
-          <div className="avatar">M</div>
+          <div className="avatar" title={profile?.full_name ?? ''}>
+            {profile?.full_name?.charAt(0).toUpperCase() ?? '?'}
+          </div>
+          <button
+            className="icon-btn"
+            aria-label="Sair"
+            onClick={handleSignOut}
+            title="Sair"
+          >
+            <LogOut size={18} />
+          </button>
           <button 
             className="icon-btn lg:hidden flex"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
