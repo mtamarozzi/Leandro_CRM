@@ -428,11 +428,41 @@ Validação manual (2026-04-14): toast de sucesso, persistência confirmada apó
 
 **Decisão de escopo confirmada:** `primary_color` é salva no banco mas **só se aplica ao catálogo público** (Etapa 6). Os tokens visuais do CRM continuam fixos no dourado `#8B6914` em `src/index.css` para garantir consistência visual pro corretor. Tema dinâmico no CRM foi explicitamente descartado.
 
-**3.3 Migração: Empreendimentos/Imóveis**
-- Hooks completos (CRUD + media)
-- Wizard de cadastro em 4 passos
-- Upload de fotos com preview
-- Refatoração da tela "Empreendimentos" (renomeada internamente pra "Imóveis")
+**3.3 Migração: Empreendimentos/Imóveis** ✅ concluído em 2026-04-14
+
+Decisões tomadas antes da execução:
+- Renomear UI **"Empreendimentos" → "Imóveis"** (cobre venda+locação+lançamento)
+- Lista: grid único com chips de filtro por purpose
+- `ref_code`: **server-side** auto-gerado (`LDR-AAAA-NNNN`) via RPC + sequence atômica
+- Wizard de 4 passos: Identificação · Localização · Características · Valores+Fotos
+- Soft-delete: lista esconde deletados (sem toggle por enquanto)
+- Cadastro em modal grande (sem URL própria)
+- Photos handled em modo "live": só após o property existir no banco
+- Cover real no card da lista ficou pra polish posterior (placeholders coloridos por enquanto, evita N+1 query)
+
+Entregas (8 commits entre `43842cb` e `f9c17b4`):
+- `feat(imoveis)`: schema Zod com `superRefine` (lançamento exige construtora; venda exige `sale_price`; locação exige `rent_price`) + 4 sub-schemas progressivos pro wizard
+- `feat(imoveis)`: migration `0005` — tabela `property_ref_counters` + função `generate_property_ref_code()` (SECURITY DEFINER, atômica via UPSERT)
+- `feat(imoveis)`: hook `useProperties.ts` com 9 operações (list filtrada, detail, create com RPC, update, soft-delete, media list/upload/reorder/setCover/delete)
+- `feat(imoveis)`: componente `PhotoUploader` com `@dnd-kit/sortable` (drag pra reordenar, marcar capa, validação 5MB)
+- `feat(imoveis)`: 4 componentes Step do wizard (`Step1Identification`, `Step2Location`, `Step3Features`, `Step4ValuesPhotos`) com campos condicionais por purpose
+- `feat(imoveis)`: `PropertyWizardModal` orquestrador com `FormProvider`, navegação entre passos, validação por etapa via `trigger()`, e modo "fotos" pós-criação
+- `feat(imoveis)`: refatora `PropertiesView` em `App.tsx` — usa `useProperties`, chips de filtro (Todos/Venda/Locação/Lançamento), busca por código/bairro/endereço, conecta `Plus` ao modal, novo card mostra purpose+status+ref_code+price formatado em BRL
+- CSS dedicado em `src/styles/property-wizard.css` (compartilhado com `wizard-step` e `photo-uploader`)
+
+Tabela `properties` no banco já tinha 30+ campos do plano — nenhuma migration de coluna foi necessária.
+
+Pendências conhecidas (3.3):
+- Cover real na lista (em vez do placeholder colorido) — pode virar 3.3.8 ou ficar pra polish do 3.5
+- Edição de imóvel existente (wizard atual só cria) — sub-bloco futuro
+- Filtros avançados: city, neighborhood, faixa de preço — UI pode ganhar drawer de filtros depois
+- Toggle "mostrar arquivados" — não implementado por escolha (decisão 5a)
+
+**3.4 Migração: Leads + Funil**
+- Hooks completos
+- Modal "+ Novo Lead"
+- Drag-and-drop no funil com otimistic updates
+- Modal de detalhe com timeline de interações
 
 **3.4 Migração: Leads + Funil**
 - Hooks completos
@@ -621,6 +651,13 @@ Branches:
 14. `feat(config): adiciona botao de configuracoes na topbar` (3.2.8)
 15. `docs(relatorio): atualiza para v1.3 com conclusao do sub-bloco 3.2` (3.2.9)
 16. `feat(backend): adiciona coluna phone em workspaces e regera types` (3.2.10 hotfix)
+17. `docs(relatorio): atualiza para v1.4 com hotfix 3.2.10 e escopo do primary_color` (3.2.10 docs)
+18. `feat(imoveis): adiciona schema zod do wizard com validacao por etapa` (3.3.1)
+19. `feat(imoveis): rpc generate_property_ref_code e hooks crud com gestao de fotos` (3.3.2)
+20. `feat(imoveis): adiciona PhotoUploader com drag-drop dnd-kit e cover` (3.3.3)
+21. `feat(imoveis): adiciona 4 steps do wizard com campos condicionais` (3.3.4)
+22. `feat(imoveis): adiciona PropertyWizardModal orquestrador com 4 etapas e fotos` (3.3.5)
+23. `feat(imoveis): refatora PropertiesView para usar dados reais com filtros e wizard` (3.3.6)
 
 ### Estado do Supabase
 
@@ -722,21 +759,22 @@ Estado técnico do projeto:
 - ✅ **Design consistente:** tela de login segue o DNA visual do CRM
 - ✅ **Histórico git organizado**
 - ✅ **Dívidas técnicas registradas**
-- ✅ **Sub-blocos 3.1 e 3.2 concluídos** — tela de Configurações funcional, hooks de workspace, upload de logo, toasts globais
-- 🟡 **Etapa 3 em execução:** próximo passo é o Sub-bloco 3.3 (Empreendimentos/Imóveis)
+- ✅ **Sub-blocos 3.1, 3.2 e 3.3 concluídos** — Configurações funcional, hooks de workspace, upload de logo, toasts globais, módulo de Imóveis com wizard de 4 passos e gestão de fotos
+- 🟡 **Etapa 3 em execução:** próximo passo é o Sub-bloco 3.4 (Leads + Funil)
 
-**Estimativa realista de conclusão da Fase A:** 4-6 semanas a partir de agora.
+**Estimativa realista de conclusão da Fase A:** 3-5 semanas a partir de agora.
 
 ---
 
 **Documento atualizado em:** 14 de abril de 2026
-**Versão do relatório:** 1.4
-**Próxima atualização:** ao fim do Sub-bloco 3.3
+**Versão do relatório:** 1.5
+**Próxima atualização:** ao fim do Sub-bloco 3.4
 
 ---
 
 ## 🔎 Changelog do documento
 
+- **v1.5 (2026-04-14):** conclusão do sub-bloco 3.3 (Imóveis) — wizard de 4 passos, RPC `generate_property_ref_code`, PhotoUploader, refatoração de `PropertiesView`.
 - **v1.4 (2026-04-14):** registra hotfix 3.2.10 (coluna `phone` em workspaces) e decisão de escopo do `primary_color` (só catálogo público).
 - **v1.3 (2026-04-14):** conclusão do sub-bloco 3.2 (Configurações), KI-002 registrado.
 - **v1.2 (2026-04-13):** conclusão do sub-bloco 3.1 (infra React Query).
