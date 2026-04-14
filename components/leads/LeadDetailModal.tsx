@@ -40,6 +40,11 @@ import {
   useLeadInteractions,
   useUpdateLead,
 } from '@/src/hooks/useLeads';
+import { useEventsByLead } from '@/src/hooks/useEvents';
+import {
+  EVENT_STATUS_LABELS,
+  EVENT_TYPE_LABELS,
+} from '@/src/lib/schemas/event-schema';
 
 interface LeadDetailModalProps {
   open: boolean;
@@ -52,6 +57,7 @@ type Mode = 'view' | 'edit';
 export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps) {
   const leadQuery = useLead(leadId ?? undefined);
   const interactionsQuery = useLeadInteractions(leadId ?? undefined);
+  const eventsQuery = useEventsByLead(leadId ?? undefined);
   const updateMutation = useUpdateLead();
   const deleteMutation = useDeleteLead();
   const addInteractionMutation = useAddInteraction();
@@ -133,12 +139,62 @@ export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps)
   };
 
   const interactions = interactionsQuery.data ?? [];
+  const events = eventsQuery.data ?? [];
 
-  const formattedInteractions = useMemo(
+  type TimelineItem =
+    | {
+        kind: 'interaction';
+        id: string;
+        date: string;
+        type: string;
+        typeLabel: string;
+        title: string | null;
+        body: string | null;
+      }
+    | {
+        kind: 'event';
+        id: string;
+        date: string;
+        type: string;
+        typeLabel: string;
+        title: string;
+        body: string | null;
+      };
+
+  const timeline = useMemo<TimelineItem[]>(() => {
+    const items: TimelineItem[] = [
+      ...interactions.map(
+        (i): TimelineItem => ({
+          kind: 'interaction',
+          id: `int-${i.id}`,
+          date: i.occurred_at,
+          type: i.type,
+          typeLabel: INTERACTION_TYPE_LABELS[i.type as keyof typeof INTERACTION_TYPE_LABELS] ?? i.type,
+          title: null,
+          body: i.content ?? null,
+        }),
+      ),
+      ...events.map(
+        (e): TimelineItem => ({
+          kind: 'event',
+          id: `evt-${e.id}`,
+          date: e.starts_at,
+          type: e.type,
+          typeLabel: `${EVENT_TYPE_LABELS[e.type]} · ${EVENT_STATUS_LABELS[e.status]}`,
+          title: e.title,
+          body: e.description ?? null,
+        }),
+      ),
+    ];
+    items.sort((a, b) => (a.date < b.date ? 1 : -1));
+    return items;
+  }, [interactions, events]);
+
+  const formattedTimeline = useMemo(
     () =>
-      interactions.map((i) => ({
-        ...i,
-        displayDate: new Date(i.occurred_at).toLocaleString('pt-BR', {
+      timeline.map((item) => ({
+        ...item,
+        displayDate: new Date(item.date).toLocaleString('pt-BR', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
@@ -146,7 +202,7 @@ export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps)
           minute: '2-digit',
         }),
       })),
-    [interactions],
+    [timeline],
   );
 
   if (!open || !leadId) return null;
@@ -394,7 +450,12 @@ export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps)
 
               <section className="lead-detail__section">
                 <h3 className="lead-detail__section-title">
-                  <MessageSquare size={14} aria-hidden="true" /> Timeline ({interactions.length})
+                  <MessageSquare size={14} aria-hidden="true" /> Timeline ({timeline.length})
+                  {events.length > 0 && (
+                    <span className="text-muted-foreground" style={{ fontSize: '0.72rem', fontWeight: 400 }}>
+                      ({interactions.length} {interactions.length === 1 ? 'interação' : 'interações'} · {events.length} {events.length === 1 ? 'evento' : 'eventos'})
+                    </span>
+                  )}
                 </h3>
 
                 <form onSubmit={onSubmitInteraction} className="lead-detail__interaction-form">
@@ -429,25 +490,29 @@ export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps)
                 )}
 
                 <ul className="lead-detail__timeline">
-                  {formattedInteractions.length === 0 && !interactionsQuery.isLoading && (
+                  {formattedTimeline.length === 0 && !interactionsQuery.isLoading && !eventsQuery.isLoading && (
                     <li className="lead-detail__timeline-empty">
-                      Nenhuma interação registrada ainda.
+                      Nenhuma interação ou evento registrado ainda.
                     </li>
                   )}
-                  {formattedInteractions.map((i) => (
-                    <li key={i.id} className="lead-detail__timeline-item">
+                  {formattedTimeline.map((item) => (
+                    <li
+                      key={item.id}
+                      className={`lead-detail__timeline-item lead-detail__timeline-item--${item.kind}`}
+                    >
                       <div className="lead-detail__timeline-icon">
                         <Calendar size={12} aria-hidden="true" />
                       </div>
                       <div className="lead-detail__timeline-content">
                         <div className="lead-detail__timeline-row">
-                          <span className={`tag tag--${i.type}`}>
-                            {INTERACTION_TYPE_LABELS[i.type]}
-                          </span>
-                          <time className="lead-detail__timeline-date">{i.displayDate}</time>
+                          <span className={`tag tag--${item.type}`}>{item.typeLabel}</span>
+                          <time className="lead-detail__timeline-date">{item.displayDate}</time>
                         </div>
-                        {i.content && (
-                          <p className="lead-detail__timeline-text">{i.content}</p>
+                        {item.title && (
+                          <strong className="lead-detail__timeline-title">{item.title}</strong>
+                        )}
+                        {item.body && (
+                          <p className="lead-detail__timeline-text">{item.body}</p>
                         )}
                       </div>
                     </li>

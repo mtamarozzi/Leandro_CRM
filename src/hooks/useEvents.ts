@@ -37,6 +37,23 @@ export function useEvents(filters?: EventFilters) {
   });
 }
 
+export function useEventsByLead(leadId: string | undefined) {
+  return useQuery<EventRow[]>({
+    queryKey: leadId ? ['events', 'by-lead', leadId] : ['events', 'by-lead', 'none'],
+    enabled: !!leadId,
+    queryFn: async () => {
+      if (!leadId) return [];
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('lead_id', leadId)
+        .order('starts_at', { ascending: false });
+      assertNoError(error);
+      return data ?? [];
+    },
+  });
+}
+
 export function useEvent(id: string | undefined) {
   return useQuery<EventRow | null>({
     queryKey: id ? queryKeys.events.detail(id) : ['events', 'detail', 'none'],
