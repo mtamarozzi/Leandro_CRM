@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart3, 
   Users, 
@@ -28,6 +28,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useCurrentProfile } from '@/src/hooks/useCurrentProfile';
+import { useProperties } from '@/src/hooks/useProperties';
+import { PropertyWizardModal } from '@/components/property-wizard/PropertyWizardModal';
+import {
+  PROPERTY_KIND_LABELS,
+  PROPERTY_PURPOSE_LABELS,
+  PROPERTY_STATUS_LABELS,
+  type PropertyPurpose,
+} from '@/src/lib/schemas/property-schema';
+import type { Database } from '@/src/types/database';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -101,7 +110,7 @@ export default function App() {
     { id: 'leads', label: 'Leads', icon: Users },
     { id: 'import', label: 'Importar', icon: Upload },
     { id: 'funnel', label: 'Funil', icon: Filter },
-    { id: 'properties', label: 'Empreendimentos', icon: Building2 },
+    { id: 'properties', label: 'Imóveis', icon: Building2 },
     { id: 'agenda', label: 'Agenda', icon: CalendarIcon },
   ];
 
@@ -289,7 +298,7 @@ function DashboardView() {
 
         <GlassCard className="kpi-card kpi-card--dark border-none">
           <div className="flex flex-row items-center justify-between pb-2">
-            <div className="kpi-label font-medium">Empreendimentos</div>
+            <div className="kpi-label font-medium">Imóveis</div>
             <div className="kpi-icon"><Building2 size={20} /></div>
           </div>
           <div className="kpi-value">{mockProperties.length}</div>
@@ -700,38 +709,128 @@ function FunnelView() {
   );
 }
 
+type PropertyRow = Database['public']['Tables']['properties']['Row'];
+
+const PURPOSE_FILTERS: Array<{ value: PropertyPurpose | 'all'; label: string }> = [
+  { value: 'all', label: 'Todos' },
+  { value: 'venda', label: 'Venda' },
+  { value: 'locacao', label: 'Locação' },
+  { value: 'lancamento', label: 'Lançamento' },
+];
+
+const PURPOSE_TAG_CLASS: Record<PropertyPurpose, string> = {
+  venda: 'tag--pronto',
+  locacao: 'tag--em-obras',
+  lancamento: 'tag--lancamento',
+};
+
+function formatBRL(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '—';
+  return value.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  });
+}
+
+function getPropertyTitle(p: PropertyRow): string {
+  if (p.purpose === 'lancamento' && p.development_name) return p.development_name;
+  return `${PROPERTY_KIND_LABELS[p.kind]} em ${p.neighborhood}`;
+}
+
+function getPropertyPrice(p: PropertyRow): string {
+  if (p.purpose === 'locacao') {
+    return p.rent_price ? `${formatBRL(p.rent_price)}/mês` : '—';
+  }
+  return formatBRL(p.sale_price);
+}
+
+function getPropertyTypology(p: PropertyRow): string {
+  const parts: string[] = [];
+  if (p.bedrooms) parts.push(`${p.bedrooms} dorm${p.bedrooms > 1 ? 's' : ''}`);
+  if (p.suites) parts.push(`${p.suites} suíte${p.suites > 1 ? 's' : ''}`);
+  if (p.usable_area_m2) parts.push(`${p.usable_area_m2} m²`);
+  return parts.length > 0 ? parts.join(' · ') : PROPERTY_KIND_LABELS[p.kind];
+}
+
 function PropertiesView() {
-  const statusToTagClass = (status: Property['status']) => {
-    const map: Record<Property['status'], string> = {
-      'Em Obras': 'tag--em-obras',
-      'Lançamento': 'tag--lancamento',
-      'Pronto': 'tag--pronto',
-    };
-    return map[status];
-  };
+  const [purposeFilter, setPurposeFilter] = useState<PropertyPurpose | 'all'>('all');
+  const [search, setSearch] = useState('');
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  const filters = useMemo(
+    () => ({
+      ...(purposeFilter !== 'all' ? { purpose: purposeFilter } : {}),
+      ...(search.trim() ? { search: search.trim() } : {}),
+    }),
+    [purposeFilter, search],
+  );
+
+  const propertiesQuery = useProperties(filters);
+  const properties = propertiesQuery.data ?? [];
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-display font-bold tracking-tight">Empreendimentos</h2>
-          <p className="text-muted-foreground">{mockProperties.length} empreendimentos cadastrados</p>
+          <h2 className="text-3xl font-display font-bold tracking-tight">Imóveis</h2>
+          <p className="text-muted-foreground">
+            {propertiesQuery.isLoading
+              ? 'Carregando…'
+              : `${properties.length} ${properties.length === 1 ? 'imóvel cadastrado' : 'imóveis cadastrados'}`}
+          </p>
         </div>
-        <BtnPrimary>
-          <Plus className="mr-2 h-4 w-4" /> Novo Empreendimento
+        <BtnPrimary onClick={() => setWizardOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Novo imóvel
         </BtnPrimary>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        {PURPOSE_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setPurposeFilter(f.value)}
+            className={`tag ${purposeFilter === f.value ? 'tag--destaque' : 'tag--pronto'} cursor-pointer`}
+          >
+            {f.label}
+          </button>
+        ))}
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por código, bairro, endereço…"
+          className="ml-auto max-w-xs"
+        />
+      </div>
+
+      {propertiesQuery.isError && (
+        <p className="text-destructive text-sm">
+          Erro ao carregar imóveis: {(propertiesQuery.error as Error).message}
+        </p>
+      )}
+
+      {!propertiesQuery.isLoading && properties.length === 0 && (
+        <div className="emp-card" style={{ padding: '2rem', textAlign: 'center' }}>
+          <p className="text-muted-foreground">
+            Nenhum imóvel encontrado. Clique em <strong>Novo imóvel</strong> para começar.
+          </p>
+        </div>
+      )}
+
       <div className="emp-grid stagger">
-        {mockProperties.map((prop, idx) => {
+        {properties.map((prop, idx) => {
           const mockClass = `emp-${(idx % 3) + 1}`;
+          const purposeLabel = PROPERTY_PURPOSE_LABELS[prop.purpose];
+          const statusLabel = PROPERTY_STATUS_LABELS[prop.status];
           return (
             <div key={prop.id} className="emp-card">
               <div className="emp-image">
                 <div className={`emp-image-mock ${mockClass}`} />
                 <div className="tag-stack">
-                  <span className={`tag ${statusToTagClass(prop.status)}`}>{prop.status}</span>
-                  {prop.isFeatured && (
+                  <span className={`tag ${PURPOSE_TAG_CLASS[prop.purpose]}`}>{purposeLabel}</span>
+                  <span className="tag">{statusLabel}</span>
+                  {prop.is_featured && (
                     <span className="tag tag--destaque">
                       <Star size={10} className="inline mr-1 -mt-0.5 fill-current" />
                       Destaque
@@ -740,25 +839,29 @@ function PropertiesView() {
                 </div>
               </div>
               <div className="emp-body">
-                <div className="emp-name">{prop.name}</div>
-                <div className="emp-builder">{prop.developer}</div>
+                <div className="emp-name">{getPropertyTitle(prop)}</div>
+                <div className="emp-builder">
+                  {prop.developer ?? `Ref: ${prop.ref_code ?? '—'}`}
+                </div>
                 <div className="emp-info">
                   <div>
                     <small>📍 Localização</small>
-                    <div className="emp-info-value">{prop.region}</div>
+                    <div className="emp-info-value">
+                      {prop.neighborhood}, {prop.city}
+                    </div>
                   </div>
                   <div>
-                    <small>💰 Preço</small>
-                    <div className="emp-price">{prop.priceRange}</div>
+                    <small>💰 {prop.purpose === 'locacao' ? 'Aluguel' : 'Preço'}</small>
+                    <div className="emp-price">{getPropertyPrice(prop)}</div>
                   </div>
                   <div>
                     <small>🏠 Tipologia</small>
-                    <div className="emp-info-value">{prop.units}</div>
+                    <div className="emp-info-value">{getPropertyTypology(prop)}</div>
                   </div>
                 </div>
-                <p className="emp-desc">{prop.description}</p>
+                {prop.highlights && <p className="emp-desc">{prop.highlights}</p>}
                 <button type="button" className="btn-material">
-                  Ver Material de Vendas
+                  Ver detalhes
                   <ArrowRight size={14} />
                 </button>
               </div>
@@ -766,6 +869,14 @@ function PropertiesView() {
           );
         })}
       </div>
+
+      <PropertyWizardModal
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={() => {
+          // mantém o modal aberto pra adicionar fotos; lista é invalidada pelo hook
+        }}
+      />
     </div>
   );
 }
