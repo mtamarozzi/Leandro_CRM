@@ -76,7 +76,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/glass-card';
-import { StatusBadge } from '@/components/ui/status-badge';
 import { BtnWhatsapp } from '@/components/ui/btn-whatsapp';
 import { BtnPrimary } from '@/components/ui/btn-primary';
 import { 
@@ -99,7 +98,6 @@ import {
   Cell,
   Legend
 } from 'recharts';
-import { mockLeads, mockProperties, mockEvents } from './mockData';
 
 export default function App() {
   const { signOut } = useAuth();
