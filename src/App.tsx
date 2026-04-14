@@ -1087,7 +1087,15 @@ function PropertiesView() {
           return (
             <div key={prop.id} className="emp-card">
               <div className="emp-image">
-                <div className={`emp-image-mock ${mockClass}`} />
+                {prop.cover_url ? (
+                  <img
+                    src={prop.cover_url}
+                    alt={`Foto de ${getPropertyTitle(prop)}`}
+                    className="emp-image-photo"
+                  />
+                ) : (
+                  <div className={`emp-image-mock ${mockClass}`} />
+                )}
                 <div className="tag-stack">
                   <span className={`tag ${PURPOSE_TAG_CLASS[prop.purpose]}`}>{purposeLabel}</span>
                   <span className="tag">{statusLabel}</span>

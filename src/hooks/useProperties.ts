@@ -26,19 +26,35 @@ type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
 type PropertyUpdate = Database['public']['Tables']['properties']['Update'];
 type MediaRow = Database['public']['Tables']['media']['Row'];
 
+export type PropertyWithCover = PropertyRow & { cover_url: string | null };
+
 const PROPERTIES_BUCKET = 'properties';
+
+interface MediaSlim {
+  url: string;
+  is_cover: boolean | null;
+  display_order: number;
+}
+
+function pickCoverUrl(media: MediaSlim[] | null | undefined): string | null {
+  if (!media || media.length === 0) return null;
+  const cover = media.find((m) => m.is_cover === true);
+  if (cover) return cover.url;
+  const sorted = [...media].sort((a, b) => a.display_order - b.display_order);
+  return sorted[0]?.url ?? null;
+}
 
 // ---------------------------------------------------------------------------
 // Listagem
 // ---------------------------------------------------------------------------
 
 export function useProperties(filters?: PropertyFilters) {
-  return useQuery<PropertyRow[]>({
+  return useQuery<PropertyWithCover[]>({
     queryKey: queryKeys.properties.list(filters),
     queryFn: async () => {
       let query = supabase
         .from('properties')
-        .select('*')
+        .select('*, media(url, is_cover, display_order)')
         .is('deleted_at', null)
         .order('updated_at', { ascending: false });
 
@@ -64,7 +80,10 @@ export function useProperties(filters?: PropertyFilters) {
 
       const { data, error } = await query;
       assertNoError(error);
-      return data ?? [];
+      return (data ?? []).map((p) => {
+        const { media, ...rest } = p as PropertyRow & { media: MediaSlim[] | null };
+        return { ...rest, cover_url: pickCoverUrl(media) } as PropertyWithCover;
+      });
     },
   });
 }

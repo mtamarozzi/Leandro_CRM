@@ -235,3 +235,17 @@
 .emp-action-btn--danger:hover:not(:disabled) {
   background: rgba(239, 68, 68, 0.1);
 }
+
+/* ============================================================================
+   3.6.4 — Cover real (foto) no card de imóvel
+   ============================================================================ */
+
+.emp-image-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
