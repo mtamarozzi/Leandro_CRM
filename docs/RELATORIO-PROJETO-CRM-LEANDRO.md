@@ -458,17 +458,26 @@ Pendências conhecidas (3.3):
 - Filtros avançados: city, neighborhood, faixa de preço — UI pode ganhar drawer de filtros depois
 - Toggle "mostrar arquivados" — não implementado por escolha (decisão 5a)
 
-**3.4 Migração: Leads + Funil**
-- Hooks completos
-- Modal "+ Novo Lead"
-- Drag-and-drop no funil com otimistic updates
-- Modal de detalhe com timeline de interações
+**3.4 Migração: Leads + Funil** ✅ concluído em 2026-04-14
 
-**3.4 Migração: Leads + Funil**
-- Hooks completos
-- Modal "+ Novo Lead"
-- Drag-and-drop no funil com otimistic updates
-- Modal de detalhe com timeline de interações
+Decisões tomadas antes da execução:
+- Modal "Novo Lead" **completo** (todos os campos: email, origem, interesse, orçamento, notas)
+- Funil com **6 colunas**: 4 principais (Novo/Contato/Visita/Proposta) em layout central + 2 laterais compactas (Ganho/Perdido)
+- Drag no funil **gera `interaction` do tipo `status_change` automaticamente** (timeline rica "de graça")
+
+Entregas (7 commits entre `5ea50ff` e `6dffa86`):
+- `feat(leads)`: schemas Zod `lead-schema.ts` + `interaction-schema.ts` com enums, labels pt-BR, `LEAD_FORM_DEFAULTS` e `LeadListFilters`
+- `feat(leads)`: hook `useLeads.ts` com 8 operações — `useLeads` (filtrada), `useLead`, `useCreateLead`, `useUpdateLead`, `useDeleteLead` (soft), `useUpdateLeadStatus` (**optimistic update com rollback + status_change auto**), `useLeadInteractions`, `useAddInteraction`
+- `feat(leads)`: `NewLeadModal` — form completo (name+phone+email+origin+status+interest_purpose+interest_type+preferred_city/region+budget+notes) com validação Zod e toasts
+- `feat(leads)`: `LeadDetailModal` — view + edit inline + **timeline de interações** + formulário pra adicionar interação manual (note/whatsapp/call/email/meeting/visit) + soft-delete com confirmação
+- `feat(leads)`: refatora `LeadsView` — usa `useLeads`, filtros (search/status/origin), card clicável abre detail, `BtnWhatsapp` com `wa.me/` real
+- `feat(leads)`: refatora `FunnelView` com `@dnd-kit/core` — `DndContext` + `useDroppable` por coluna + `useDraggable` por card. 4 colunas principais + lateral com 2 compactas (decisão 2c). Drag dispara `useUpdateLeadStatus` (optimistic), toast de confirmação. Click no card abre detail. Estatísticas agora usam dados reais.
+- CSS atualizado em `funil.css` — grid 4 cols, `.funnel-layout` com side panel responsivo, `.kanban-column--compact` e `.kanban-column--over` (hover drop), cor pro `data-stage="ganho"`
+
+Pendências conhecidas (3.4):
+- `mockLeads`/`mockProperties` ainda referenciados em `DashboardView` (KPIs) — serão removidos no 3.5
+- Selects nativos novos no `NewLeadModal` e `LeadDetailModal` herdam o **KI-003 #3** (visual feio no dark mode) — fica pro polish
+- Filtro de região manual no lead (texto ilike) — sem autocomplete ainda
 
 **3.5 Dashboard + Agenda + Cleanup**
 - KPIs reais e gráficos com dados agregados
