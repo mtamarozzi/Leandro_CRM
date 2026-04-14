@@ -1,7 +1,41 @@
 .kanban {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
+}
+
+.funnel-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 1024px) {
+  .funnel-layout {
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+}
+
+.funnel-side {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-content: start;
+}
+
+@media (max-width: 1023px) {
+  .funnel-side {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.kanban-column--compact {
+  min-height: 160px;
+}
+
+.kanban-column--over {
+  outline: 2px dashed var(--col-color, #D4A017);
+  outline-offset: -4px;
 }
 
 .kanban-column {
@@ -41,6 +75,7 @@
 .kanban-column[data-stage="visita"]   { --col-color: var(--status-visita);   }
 .kanban-column[data-stage="proposta"] { --col-color: var(--status-proposta); }
 .kanban-column[data-stage="perdido"]  { --col-color: var(--status-perdido);  }
+.kanban-column[data-stage="ganho"]    { --col-color: var(--status-ganho, #10b981); }
 
 .col-count {
   background: rgba(255,255,255,0.08);

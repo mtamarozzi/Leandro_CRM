@@ -29,7 +29,18 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useCurrentProfile } from '@/src/hooks/useCurrentProfile';
 import { useProperties } from '@/src/hooks/useProperties';
-import { useLeads } from '@/src/hooks/useLeads';
+import { useLeads, useUpdateLeadStatus } from '@/src/hooks/useLeads';
+import {
+  DndContext,
+  PointerSensor,
+  closestCorners,
+  useDroppable,
+  useDraggable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { toast } from 'sonner';
 import { PropertyWizardModal } from '@/components/property-wizard/PropertyWizardModal';
 import { NewLeadModal } from '@/components/leads/NewLeadModal';
 import { LeadDetailModal } from '@/components/leads/LeadDetailModal';
@@ -708,57 +719,99 @@ function ImportView() {
   );
 }
 
-function FunnelView() {
-  const columns: LeadStatus[] = ['Novo', 'Em Contato', 'Visita Agendada', 'Proposta', 'Perdido'];
-  
-  const getLeadsByStatus = (status: LeadStatus) => mockLeads.filter(l => l.status === status);
+const MAIN_FUNNEL_COLUMNS: LeadStatus[] = ['novo', 'contato', 'visita', 'proposta'];
+const SIDE_FUNNEL_COLUMNS: LeadStatus[] = ['ganho', 'perdido'];
 
-  const statusToSlug = (status: string) => {
-    const map: Record<string, string> = {
-      'Novo': 'novo',
-      'Em Contato': 'contato',
-      'Visita Agendada': 'visita',
-      'Proposta': 'proposta',
-      'Perdido': 'perdido',
-      'Fechado': 'perdido'
+function FunnelView() {
+  const leadsQuery = useLeads();
+  const updateStatus = useUpdateLeadStatus();
+  const [detailId, setDetailId] = useState<string | null>(null);
+
+  const leads = leadsQuery.data ?? [];
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  const leadsByStatus = useMemo(() => {
+    const map: Record<LeadStatus, LeadRow[]> = {
+      novo: [],
+      contato: [],
+      visita: [],
+      proposta: [],
+      ganho: [],
+      perdido: [],
     };
-    return map[status] || 'novo';
+    for (const lead of leads) {
+      map[lead.status].push(lead);
+    }
+    return map;
+  }, [leads]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    const leadId = String(active.id);
+    const nextStatus = String(over.id) as LeadStatus;
+    if (!LEAD_STATUSES.includes(nextStatus)) return;
+    const lead = leads.find((l) => l.id === leadId);
+    if (!lead || lead.status === nextStatus) return;
+
+    updateStatus.mutate(
+      { id: leadId, nextStatus, previousStatus: lead.status },
+      {
+        onError: (err) => {
+          toast.error(`Erro ao mudar status: ${err.message}`);
+        },
+        onSuccess: () => {
+          toast.success(
+            `Lead movido para "${LEAD_STATUS_LABELS[nextStatus]}".`,
+          );
+        },
+      },
+    );
   };
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-display font-bold tracking-tight">Funil de Vendas</h2>
-        <p className="text-muted-foreground">Arraste e solte os leads entre as etapas do funil</p>
+        <p className="text-muted-foreground">
+          Arraste e solte os leads entre as etapas. Toque num card pra abrir detalhes.
+        </p>
       </div>
 
-      <div className="kanban stagger">
-        {columns.map((column) => (
-          <div key={column} className="kanban-column" data-stage={statusToSlug(column)}>
-            <div className="kanban-column__header">
-              <h3 className="font-display font-bold text-sm uppercase tracking-wider text-foreground">{column}</h3>
-              <div className="col-count">{getLeadsByStatus(column).length}</div>
-            </div>
-            
-            <div className="flex-1 p-3 space-y-3 bg-foreground/5 relative z-10 rounded-b-[var(--radius-lg)]">
-              {getLeadsByStatus(column).map((lead) => (
-                <div key={lead.id} className="mini-card cursor-grab active:cursor-grabbing hover:shadow-md transition-all">
-                  <strong>{lead.name}</strong>
-                  <div className="info flex items-center gap-1">
-                    <Phone size={10} /> {lead.phone}
-                  </div>
-                  <div className="price">{lead.interest} · {lead.valueRange}</div>
-                </div>
-              ))}
-              {getLeadsByStatus(column).length === 0 && (
-                <div className="h-20 flex items-center justify-center border-2 border-dashed border-border/50 rounded-xl text-xs text-muted-foreground">
-                  Sem leads nesta etapa
-                </div>
-              )}
-            </div>
+      {leadsQuery.isError && (
+        <p className="text-destructive text-sm">
+          Erro ao carregar funil: {(leadsQuery.error as Error).message}
+        </p>
+      )}
+
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+        <div className="funnel-layout">
+          <div className="kanban stagger">
+            {MAIN_FUNNEL_COLUMNS.map((status) => (
+              <KanbanColumn
+                key={status}
+                status={status}
+                leads={leadsByStatus[status]}
+                onCardClick={(id) => setDetailId(id)}
+              />
+            ))}
           </div>
-        ))}
-      </div>
+          <aside className="funnel-side">
+            {SIDE_FUNNEL_COLUMNS.map((status) => (
+              <KanbanColumn
+                key={status}
+                status={status}
+                leads={leadsByStatus[status]}
+                compact
+                onCardClick={(id) => setDetailId(id)}
+              />
+            ))}
+          </aside>
+        </div>
+      </DndContext>
 
       <GlassCard className="border-none">
         <CardHeader>
@@ -766,21 +819,25 @@ function FunnelView() {
         </CardHeader>
         <CardContent>
           <div className="funnel-meter">
-            {columns.map((col) => {
-              const count = getLeadsByStatus(col).length;
-              if (count === 0) return null;
-              const percentage = ((count / mockLeads.length) * 100).toFixed(1);
+            {LEAD_STATUSES.map((status) => {
+              const count = leadsByStatus[status].length;
+              if (count === 0 || leads.length === 0) return null;
+              const percentage = ((count / leads.length) * 100).toFixed(1);
               return (
-                <div 
-                  key={col} 
-                  className="seg" 
-                  style={{ 
-                    '--w': `${percentage}%`, 
-                    background: `var(--status-${statusToSlug(col)})` 
-                  } as React.CSSProperties}
-                  title={`${col}: ${count} leads (${percentage}%)`}
+                <div
+                  key={status}
+                  className="seg"
+                  style={
+                    {
+                      '--w': `${percentage}%`,
+                      background: `var(--status-${status})`,
+                    } as React.CSSProperties
+                  }
+                  title={`${LEAD_STATUS_LABELS[status]}: ${count} leads (${percentage}%)`}
                 >
-                  <span className="hidden md:inline">{col} · {count}</span>
+                  <span className="hidden md:inline">
+                    {LEAD_STATUS_LABELS[status]} · {count}
+                  </span>
                   <span className="inline md:hidden">{count}</span>
                 </div>
               );
@@ -788,6 +845,86 @@ function FunnelView() {
           </div>
         </CardContent>
       </GlassCard>
+
+      <LeadDetailModal
+        open={detailId !== null}
+        leadId={detailId}
+        onClose={() => setDetailId(null)}
+      />
+    </div>
+  );
+}
+
+interface KanbanColumnProps {
+  status: LeadStatus;
+  leads: LeadRow[];
+  compact?: boolean;
+  onCardClick: (leadId: string) => void;
+}
+
+function KanbanColumn({ status, leads, compact, onCardClick }: KanbanColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`kanban-column ${compact ? 'kanban-column--compact' : ''} ${isOver ? 'kanban-column--over' : ''}`}
+      data-stage={status}
+    >
+      <div className="kanban-column__header">
+        <h3 className="font-display font-bold text-sm uppercase tracking-wider text-foreground">
+          {LEAD_STATUS_LABELS[status]}
+        </h3>
+        <div className="col-count">{leads.length}</div>
+      </div>
+
+      <div className="flex-1 p-3 space-y-3 bg-foreground/5 relative z-10 rounded-b-[var(--radius-lg)] min-h-[140px]">
+        {leads.map((lead) => (
+          <KanbanCard key={lead.id} lead={lead} onOpen={() => onCardClick(lead.id)} />
+        ))}
+        {leads.length === 0 && (
+          <div className="h-20 flex items-center justify-center border-2 border-dashed border-border/50 rounded-xl text-xs text-muted-foreground">
+            Solte aqui
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface KanbanCardProps {
+  lead: LeadRow;
+  onOpen: () => void;
+}
+
+function KanbanCard({ lead, onOpen }: KanbanCardProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: lead.id,
+  });
+  const style: React.CSSProperties = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="mini-card hover:shadow-md transition-all"
+      onClick={(e) => {
+        if (!isDragging) {
+          e.stopPropagation();
+          onOpen();
+        }
+      }}
+    >
+      <strong>{lead.name}</strong>
+      <div className="info flex items-center gap-1">
+        <Phone size={10} /> {lead.phone}
+      </div>
+      <div className="price">{formatLeadInterest(lead)} · {formatLeadBudget(lead)}</div>
     </div>
   );
 }
