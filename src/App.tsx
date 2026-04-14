@@ -89,7 +89,6 @@ import {
   Legend
 } from 'recharts';
 import { mockLeads, mockProperties, mockEvents } from './mockData';
-import { Lead, Property, Event, LeadStatus } from './types';
 
 export default function App() {
   const { signOut } = useAuth();
