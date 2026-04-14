@@ -28,7 +28,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useCurrentProfile } from '@/src/hooks/useCurrentProfile';
-import { useProperties } from '@/src/hooks/useProperties';
+import { useProperties, useDeleteProperty } from '@/src/hooks/useProperties';
 import { useLeads, useUpdateLeadStatus } from '@/src/hooks/useLeads';
 import {
   useDashboardKpis,
@@ -1016,6 +1016,8 @@ function PropertiesView() {
   const [purposeFilter, setPurposeFilter] = useState<PropertyPurpose | 'all'>('all');
   const [search, setSearch] = useState('');
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
+  const deletePropertyMutation = useDeleteProperty();
 
   const filters = useMemo(
     () => ({
@@ -1119,6 +1121,40 @@ function PropertiesView() {
                   </div>
                 </div>
                 {prop.highlights && <p className="emp-desc">{prop.highlights}</p>}
+                <div className="emp-card-actions">
+                  <button
+                    type="button"
+                    className="emp-action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingPropertyId(prop.id);
+                      setWizardOpen(true);
+                    }}
+                  >
+                    <Settings size={14} aria-hidden="true" /> Editar
+                  </button>
+                  <button
+                    type="button"
+                    className="emp-action-btn emp-action-btn--danger"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const ok = window.confirm(
+                        `Arquivar o imóvel ${prop.ref_code ?? ''} (${getPropertyTitle(prop)})?`,
+                      );
+                      if (!ok) return;
+                      try {
+                        await deletePropertyMutation.mutateAsync(prop.id);
+                        toast.success('Imóvel arquivado.');
+                      } catch (err) {
+                        const message = err instanceof Error ? err.message : 'Erro ao arquivar.';
+                        toast.error(message);
+                      }
+                    }}
+                    disabled={deletePropertyMutation.isPending}
+                  >
+                    <X size={14} aria-hidden="true" /> Excluir
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -1127,7 +1163,11 @@ function PropertiesView() {
 
       <PropertyWizardModal
         open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
+        editingId={editingPropertyId}
+        onClose={() => {
+          setWizardOpen(false);
+          setEditingPropertyId(null);
+        }}
         onCreated={() => {
           // mantém o modal aberto pra adicionar fotos; lista é invalidada pelo hook
         }}
