@@ -237,10 +237,21 @@ export function PropertyWizardModal({
               }}
               noValidate
             >
-              {currentStep === 1 && <Step1Identification />}
-              {currentStep === 2 && <Step2Location />}
-              {currentStep === 3 && <Step3Features />}
-              {currentStep === 4 && <Step4ValuesPhotos photosSlot={photosSlot} />}
+              {!createdId && currentStep === 1 && <Step1Identification />}
+              {!createdId && currentStep === 2 && <Step2Location />}
+              {!createdId && currentStep === 3 && <Step3Features />}
+              {!createdId && currentStep === 4 && <Step4ValuesPhotos />}
+              {createdId && (
+                <div className="wizard-step">
+                  <header className="wizard-step__header">
+                    <h3 className="wizard-step__title">Fotos do imóvel</h3>
+                    <p className="wizard-step__hint">
+                      Arraste as imagens para reordenar. Clique na estrela pra definir a capa.
+                    </p>
+                  </header>
+                  {photosSlot}
+                </div>
+              )}
             </form>
 
             <footer className="property-wizard__footer">
