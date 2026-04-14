@@ -4,11 +4,12 @@ Arquivo de registro de problemas conhecidos que **não quebram a aplicação** m
 
 ---
 
-## 🟡 KI-001 — Recharts warning ao desmontar gráficos
+## ✅ KI-001 — Recharts warning ao desmontar gráficos — RESOLVIDO em 2026-04-14 (`6e0ea42`)
 
 **Descoberto em:** Etapa 2 (Fase A, backend)
 **Componentes afetados:** `<DashboardView>` em `src/App.tsx`
 **Severidade:** cosmética
+**Resolvido em:** Sub-bloco 3.5.2 — guardas de `data.length > 0` antes de montar `<ResponsiveContainer>` e `key` único por chart pra forçar unmount limpo.
 
 ### Sintoma
 Ao navegar para fora do Dashboard (ex: clicar em Sair, trocar de aba), o console do Vite mostra:
@@ -115,11 +116,11 @@ src/routes/_authenticated.tsx(25,11): error TS2353: 'redirect' does not exist in
 
 ### Sintomas
 
-1. **Upload de fotos invisível após criar** — Modal mostra toast "Imóvel criado, você já pode adicionar fotos", mas o `PhotoUploader` é renderizado no final do step 4 (após todos os campos), exigindo scroll pra encontrá-lo. Usuário não descobriu onde subir as fotos.
+1. ~~**Upload de fotos invisível após criar**~~ — ✅ **resolvido em 2026-04-14 (`11a1fd8`)**. Quando `createdId` é setado, o conteúdo do step 4 é substituído por um header "Fotos do imóvel" com o PhotoUploader em destaque.
 2. ~~**Título "Novo imóvel" não aparece**~~ — ✅ **resolvido em 2026-04-14 no commit `c487cdc`**. Causa real: `.topbar` com `z-index: 100` cobria o modal que estava em `z-50`. Fix: dialog overlay → `z-[200]`, content → `z-[201]`.
-3. **Selects nativos ilegíveis no dark mode** — As opções dos 3 `<select>` (Finalidade, Categoria, Situação) aparecem acinzentadas/ilegíveis no tema escuro. Browser não aplica CSS vars às options nativas.
-4. **Botão "Ver detalhes" nos cards não faz nada** — Herdado do mock original. Tela de detalhe ainda não implementada.
-5. **Setas estranhas no step bar** — Indicadores visuais (↑↓) aparecem no canto direito da barra de etapas, causados pelo `overflow-x: auto` em `.property-wizard__steps`.
+3. ~~**Selects nativos ilegíveis no dark mode**~~ — ✅ **resolvido em 2026-04-14 (`40b705f`)**. CSS com background/color hex explícito nas options dos 3 selects do wizard e modais de lead/evento.
+4. ~~**Botão "Ver detalhes" nos cards não faz nada**~~ — ✅ **resolvido em 2026-04-14 (`40b705f`)**. Botão removido do card de `PropertiesView` — detalhe será um sub-bloco próprio no futuro.
+5. ~~**Setas estranhas no step bar**~~ — ✅ **resolvido em 2026-04-14 (`40b705f`)**. `overflow-x: auto` trocado por `flex-wrap: wrap`.
 
 ### Causa raiz
 
