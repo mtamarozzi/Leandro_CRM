@@ -2,6 +2,7 @@ import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'sonner';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { queryClient } from '@/src/lib/queryClient';
 
@@ -29,6 +30,7 @@ function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <Toaster position="top-right" richColors closeButton theme="system" />
         {import.meta.env.DEV && (
           <>
             <TanStackRouterDevtools position="bottom-right" />
