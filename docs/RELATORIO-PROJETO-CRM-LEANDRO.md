@@ -403,11 +403,27 @@ zod                           ^4.3.6     ⚠️ Zod 4, sintaxe diferente do Zod 
 
 ### Sub-blocos 3.2 a 3.5 — visão geral
 
-**3.2 Tela de Configurações do Workspace**
-- Hook `useWorkspace` + mutations
-- Rota `/configuracoes` protegida
-- Formulário com nome, CRECI, telefone, cor primária, upload de logo
-- Resolve o nome genérico do workspace (problema pendente da Etapa 2)
+**3.2 Tela de Configurações do Workspace** ✅ concluído em 2026-04-14
+
+Decisões tomadas antes da execução:
+- Color picker: `react-colorful` (~3kb) + 3 presets do design system (dourado/grafite/cinza)
+- Logo: fica só no catálogo público (Etapa 6); topbar continua com `logo-preta.png`
+- Primeiro login: sem redirect automático — acesso só pelo menu
+
+Entregas (9 commits entre `8de83ad` e `ff78be5`):
+- `chore(deps)`: `react-colorful` + `sonner` instalados
+- `feat(config)`: schema Zod `workspaceUpdateSchema` com `preprocess` pra normalizar strings vazias
+- `feat(config)`: hook `useWorkspace` (query + update + upload de logo com cache-busting)
+- `feat(config)`: componente `ColorPicker` (react-colorful + input hex + presets)
+- `feat(config)`: componente `LogoUploader` (drag-and-drop + validação + preview)
+- `feat(config)`: página `WorkspaceSettingsPage` (RHF + zodResolver + sonner toasts)
+- `feat(config)`: rota `/configuracoes` + `<Toaster />` no `__root` + CSS glassmorphism
+- `feat(config)`: botão engrenagem na topbar → `useNavigate('/configuracoes')`
+- `docs(known-issues)`: registro do KI-002
+
+Bucket de logos já estava provisionado pelo `0003_storage_setup.sql` (2MB, jpeg/png/webp/svg, path `{workspace_id}/logo.{ext}`, RLS admin-only).
+
+Pendência: role `admin` no profile do user de teste precisa estar setada pra upload funcionar.
 
 **3.3 Migração: Empreendimentos/Imóveis**
 - Hooks completos (CRUD + media)
@@ -582,12 +598,24 @@ Leandro_CRM/
 Branches:
 ├── main                         ← inclui redesign (mergeado na Etapa 2)
 ├── feat/redesign-glass          ← sinônimo da main
-└── feat/backend-fase-a          ← HEAD, Etapas 1+2 commitadas, 3.1 em curso
+└── feat/backend-fase-a          ← HEAD, Etapas 1+2 + sub-blocos 3.1 e 3.2 concluídos
 ```
 
 **Commits da Fase A até agora:**
 1. `feat(backend): estrutura inicial do banco de dados` (Etapa 1)
 2. `feat(auth): cliente supabase, roteamento tanstack e tela de login` (Etapa 2)
+3. `feat(infra): configura react-query com query keys e helpers` (3.1)
+4. `docs: adiciona guia de continuidade para claude cli` (3.1 cleanup)
+5. `docs: adiciona checkpoints de continuidade do projeto` (3.1 cleanup)
+6. `chore(deps): adiciona react-colorful e sonner para tela de configuracoes` (3.2.1)
+7. `feat(config): adiciona schema zod para atualizacao do workspace` (3.2.2)
+8. `docs(known-issues): registra KI-002 sobre erros pre-existentes do tsc` (3.2.2)
+9. `feat(config): adiciona hook useWorkspace com query, update e upload de logo` (3.2.3)
+10. `feat(config): adiciona componente ColorPicker com react-colorful e presets` (3.2.4)
+11. `feat(config): adiciona componente LogoUploader com drag-and-drop e validacao` (3.2.5)
+12. `feat(config): adiciona pagina WorkspaceSettings com formulario RHF e toasts` (3.2.6)
+13. `feat(config): registra rota /configuracoes com toaster e estilos glassmorphism` (3.2.7)
+14. `feat(config): adiciona botao de configuracoes na topbar` (3.2.8)
 
 ### Estado do Supabase
 
@@ -634,6 +662,11 @@ Branches:
 **KI-001 — Warning do Recharts**
 - Severidade: cosmética
 - Resolver em: Sub-bloco 3.5 (cleanup)
+
+**KI-002 — `npm run lint` (tsc --noEmit) com 5 erros pré-existentes**
+- Severidade: leve
+- Origem: tsconfig sem `vite/client` types + `strictNullChecks` desligado + breaking change do TanStack Router
+- Resolver em: sub-bloco de cleanup (sugestão 3.6). Build e dev funcionam normalmente.
 
 ### Pendências de infraestrutura
 
@@ -684,12 +717,13 @@ Estado técnico do projeto:
 - ✅ **Design consistente:** tela de login segue o DNA visual do CRM
 - ✅ **Histórico git organizado**
 - ✅ **Dívidas técnicas registradas**
-- 🟡 **Etapa 3 iniciada:** Sub-bloco 3.1 em execução
+- ✅ **Sub-blocos 3.1 e 3.2 concluídos** — tela de Configurações funcional, hooks de workspace, upload de logo, toasts globais
+- 🟡 **Etapa 3 em execução:** próximo passo é o Sub-bloco 3.3 (Empreendimentos/Imóveis)
 
 **Estimativa realista de conclusão da Fase A:** 4-6 semanas a partir de agora.
 
 ---
 
 **Documento atualizado em:** 14 de abril de 2026
-**Versão do relatório:** 1.2
-**Próxima atualização:** ao fim do Sub-bloco 3.2
+**Versão do relatório:** 1.3
+**Próxima atualização:** ao fim do Sub-bloco 3.3
