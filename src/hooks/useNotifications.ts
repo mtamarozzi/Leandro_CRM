@@ -87,9 +87,12 @@ export interface CreateNotificationInput {
 export async function createNotification(input: CreateNotificationInput): Promise<void> {
   const workspaceId = await getCurrentWorkspaceId();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return;
+  if (!userData.user) {
+    console.warn('[createNotification] sem usuário autenticado, pulando');
+    return;
+  }
 
-  await supabase.from('notifications').insert({
+  const { error } = await supabase.from('notifications').insert({
     workspace_id: workspaceId,
     user_id: userData.user.id,
     type: input.type,
@@ -98,4 +101,8 @@ export async function createNotification(input: CreateNotificationInput): Promis
     link: input.link ?? null,
     metadata: (input.metadata ?? null) as NotificationInsert['metadata'],
   });
+
+  if (error) {
+    console.error('[createNotification] erro ao inserir:', error);
+  }
 }
