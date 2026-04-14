@@ -499,3 +499,25 @@
   color: var(--foreground);
   white-space: pre-wrap;
 }
+
+/* ============================================================================
+   KI-003 #3 — options de <select> native legíveis no dark mode
+   Browsers nativos ignoram CSS vars nas options, então usamos hex explícito.
+   ============================================================================ */
+
+.lead-modal__select option,
+.lead-detail__select option,
+.wizard-step__select option {
+  background-color: #ffffff;
+  color: #1F1F1F;
+}
+
+[data-theme='dark'] .lead-modal__select option,
+[data-theme='dark'] .lead-detail__select option,
+[data-theme='dark'] .wizard-step__select option,
+.dark .lead-modal__select option,
+.dark .lead-detail__select option,
+.dark .wizard-step__select option {
+  background-color: #2D2D2D;
+  color: #F5F5F5;
+}

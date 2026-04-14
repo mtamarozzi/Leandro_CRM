@@ -77,12 +77,12 @@
 
 .property-wizard__steps {
   display: flex;
+  flex-wrap: wrap;
   list-style: none;
   margin: 0;
   padding: 1rem 1.5rem;
   gap: 0.5rem;
   border-bottom: 1px solid var(--glass-border);
-  overflow-x: auto;
 }
 
 .property-wizard__step {

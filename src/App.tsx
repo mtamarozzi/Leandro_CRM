@@ -1121,10 +1121,6 @@ function PropertiesView() {
                   </div>
                 </div>
                 {prop.highlights && <p className="emp-desc">{prop.highlights}</p>}
-                <button type="button" className="btn-material">
-                  Ver detalhes
-                  <ArrowRight size={14} />
-                </button>
               </div>
             </div>
           );
