@@ -185,3 +185,46 @@
 
 .event-item[data-type="tarefa"]  { --evt-color: #6b7280; --evt-bg: rgba(107, 114, 128, .18); }
 .event-item[data-type="ligacao"] { --evt-color: #8b5cf6; --evt-bg: rgba(139, 92, 246, .18); }
+
+/* ============================================================================
+   3.6.7 — Calendário restaurado: pills clicáveis e contador "+N"
+   ============================================================================ */
+
+.event-pill {
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.event-pill:hover {
+  filter: brightness(1.15);
+}
+
+.cal-more {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.event-pill[data-type="tarefa"]  { --evt-color: #6b7280; --evt-bg: rgba(107, 114, 128, .18); }
+.event-pill[data-type="ligacao"] { --evt-color: #8b5cf6; --evt-bg: rgba(139, 92, 246, .18); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--input);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(212, 160, 23, 0.08);
+  border-color: var(--ring);
+}

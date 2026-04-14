@@ -1183,8 +1183,27 @@ function PropertiesView() {
   );
 }
 
+const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const MONTH_LABELS = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
 function AgendaView() {
-  const eventsQuery = useEvents();
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+  const monthStart = useMemo(
+    () => new Date(viewYear, viewMonth, 1).toISOString(),
+    [viewYear, viewMonth],
+  );
+  const monthEnd = useMemo(
+    () => new Date(viewYear, viewMonth + 1, 0, 23, 59, 59, 999).toISOString(),
+    [viewYear, viewMonth],
+  );
+
+  const eventsQuery = useEvents({ from: monthStart, to: monthEnd });
   const leadsQuery = useLeads();
   const propertiesQuery = useProperties();
 
@@ -1204,35 +1223,54 @@ function AgendaView() {
     return map;
   }, [propertiesQuery.data]);
 
-  const eventsByDate = useMemo(() => {
-    const groups = new Map<string, typeof events>();
+  const eventsByDay = useMemo(() => {
+    const map = new Map<number, typeof events>();
     for (const ev of events) {
-      const day = new Date(ev.starts_at).toLocaleDateString('pt-BR');
-      if (!groups.has(day)) groups.set(day, []);
-      groups.get(day)!.push(ev);
+      const day = new Date(ev.starts_at).getDate();
+      if (!map.has(day)) map.set(day, []);
+      map.get(day)!.push(ev);
     }
-    return Array.from(groups.entries()).sort((a, b) => {
-      const parse = (s: string) => {
-        const [d, m, y] = s.split('/').map(Number);
-        return new Date(y, m - 1, d).getTime();
-      };
-      return parse(a[0]) - parse(b[0]);
-    });
+    return map;
   }, [events]);
+
+  const upcomingEvents = useMemo(() => {
+    const now = new Date().toISOString();
+    return events
+      .filter((ev) => ev.starts_at >= now)
+      .sort((a, b) => (a.starts_at < b.starts_at ? -1 : 1))
+      .slice(0, 8);
+  }, [events]);
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstWeekday = new Date(viewYear, viewMonth, 1).getDay();
+  const isCurrentMonth = today.getFullYear() === viewYear && today.getMonth() === viewMonth;
 
   const handleOpenCreate = () => {
     setEditingId(null);
     setModalOpen(true);
   };
-
   const handleOpenEdit = (id: string) => {
     setEditingId(id);
     setModalOpen(true);
   };
-
   const handleClose = () => {
     setModalOpen(false);
     setEditingId(null);
+  };
+
+  const goPrev = () => {
+    const d = new Date(viewYear, viewMonth - 1, 1);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  };
+  const goNext = () => {
+    const d = new Date(viewYear, viewMonth + 1, 1);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  };
+  const goToday = () => {
+    setViewYear(today.getFullYear());
+    setViewMonth(today.getMonth());
   };
 
   return (
@@ -1241,15 +1279,19 @@ function AgendaView() {
         <div>
           <h1 className="page-title">Agenda</h1>
           <p className="page-subtitle">
-            {eventsQuery.isLoading
-              ? 'Carregando…'
-              : `${events.length} ${events.length === 1 ? 'evento' : 'eventos'}`}
+            {MONTH_LABELS[viewMonth]} de {viewYear} ·{' '}
+            {eventsQuery.isLoading ? 'carregando…' : `${events.length} eventos`}
           </p>
         </div>
-        <BtnPrimary onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo evento
-        </BtnPrimary>
+        <div className="flex items-center gap-2">
+          <button className="btn-secondary" onClick={goPrev}>Anterior</button>
+          <button className="btn-secondary" onClick={goToday}>Hoje</button>
+          <button className="btn-secondary" onClick={goNext}>Próximo</button>
+          <BtnPrimary className="ml-2" onClick={handleOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo evento
+          </BtnPrimary>
+        </div>
       </div>
 
       {eventsQuery.isError && (
@@ -1258,52 +1300,92 @@ function AgendaView() {
         </p>
       )}
 
-      {!eventsQuery.isLoading && events.length === 0 && (
-        <GlassCard className="border-none">
-          <div className="p-8 text-center text-muted-foreground">
-            Nenhum evento agendado. Clique em <strong>Novo evento</strong> para começar.
+      <div className="agenda-grid stagger">
+        <GlassCard className="cal-card border-none" data-glow="1">
+          <div className="cal-head">
+            <CalendarIcon size={18} aria-hidden="true" />
+            {MONTH_LABELS[viewMonth]} de {viewYear}
+          </div>
+          <div className="cal-grid">
+            {WEEKDAY_LABELS.map((day) => (
+              <div key={day} className="cal-cell weekday">{day}</div>
+            ))}
+            {Array.from({ length: firstWeekday }).map((_, i) => (
+              <div key={`pad-${i}`} className="cal-cell" />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const isToday = isCurrentMonth && today.getDate() === day;
+              const dayEvents = eventsByDay.get(day) ?? [];
+              return (
+                <div
+                  key={day}
+                  className={`cal-cell ${isToday ? 'cal-cell--today' : ''}`}
+                >
+                  <span className="cal-day">{day}</span>
+                  {dayEvents.slice(0, 2).map((ev) => (
+                    <button
+                      key={ev.id}
+                      type="button"
+                      className="event-pill"
+                      data-type={ev.type}
+                      onClick={() => handleOpenEdit(ev.id)}
+                      title={ev.title}
+                    >
+                      {new Date(ev.starts_at).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
+                      {ev.title}
+                    </button>
+                  ))}
+                  {dayEvents.length > 2 && (
+                    <span className="cal-more">+{dayEvents.length - 2}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </GlassCard>
-      )}
 
-      <div className="agenda-list">
-        {eventsByDate.map(([dateStr, dayEvents]) => (
-          <GlassCard key={dateStr} className="agenda-day-card border-none">
-            <h3 className="agenda-day-title">{dateStr}</h3>
-            <ul className="agenda-day-list">
-              {dayEvents.map((ev) => {
-                const time = new Date(ev.starts_at).toLocaleTimeString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-                const leadName = ev.lead_id ? leadsById.get(ev.lead_id) : null;
-                const propertyLabel = ev.property_id ? propertiesById.get(ev.property_id) : null;
-                return (
-                  <li
-                    key={ev.id}
-                    className="event-item"
-                    data-type={ev.type}
-                    onClick={() => handleOpenEdit(ev.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <span className="event-type">{EVENT_TYPE_LABELS[ev.type]}</span>
-                    <div className="event-title">{ev.title}</div>
-                    <div className="event-meta">
-                      <span>🕒 {time}</span>
-                      <span>• {EVENT_STATUS_LABELS[ev.status]}</span>
-                      {leadName && <span>👤 {leadName}</span>}
-                      {propertyLabel && <span>📍 {propertyLabel}</span>}
-                      {ev.location && <span>🗺 {ev.location}</span>}
-                    </div>
-                    {ev.description && (
-                      <p className="event-description">{ev.description}</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </GlassCard>
-        ))}
+        <GlassCard className="upcoming-card border-none" data-glow="2">
+          <h3>
+            <CalendarIcon size={16} aria-hidden="true" /> Próximos eventos
+          </h3>
+          {upcomingEvents.length === 0 && (
+            <p className="text-sm text-muted-foreground" style={{ marginTop: '0.5rem' }}>
+              Sem eventos futuros neste mês.
+            </p>
+          )}
+          {upcomingEvents.map((ev) => {
+            const dateStr = new Date(ev.starts_at).toLocaleString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            const leadName = ev.lead_id ? leadsById.get(ev.lead_id) : null;
+            const propertyLabel = ev.property_id ? propertiesById.get(ev.property_id) : null;
+            return (
+              <div
+                key={ev.id}
+                className="event-item"
+                data-type={ev.type}
+                onClick={() => handleOpenEdit(ev.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <span className="event-type">{EVENT_TYPE_LABELS[ev.type]}</span>
+                <div className="event-title">{ev.title}</div>
+                <div className="event-meta">
+                  <span>📅 {dateStr}</span>
+                  <span>• {EVENT_STATUS_LABELS[ev.status]}</span>
+                  {leadName && <span>👤 {leadName}</span>}
+                  {propertyLabel && <span>📍 {propertyLabel}</span>}
+                </div>
+              </div>
+            );
+          })}
+        </GlassCard>
       </div>
 
       <EventModal open={modalOpen} eventId={editingId} onClose={handleClose} />
