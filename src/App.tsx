@@ -31,6 +31,11 @@ import { useCurrentProfile } from '@/src/hooks/useCurrentProfile';
 import { useProperties } from '@/src/hooks/useProperties';
 import { useLeads, useUpdateLeadStatus } from '@/src/hooks/useLeads';
 import {
+  useDashboardKpis,
+  useLeadsByStatus,
+  useLeadsBySource,
+} from '@/src/hooks/useDashboard';
+import {
   DndContext,
   PointerSensor,
   closestCorners,
@@ -256,31 +261,29 @@ export default function App() {
   );
 }
 
+const DASHBOARD_COLORS = ['#D4A017', '#E8C547', '#1F1F1F', '#B8860B', '#808080', '#8B6914', '#2d2d2d', '#64748b'];
+
+const MONTH_NAME = new Date().toLocaleDateString('pt-BR', {
+  month: 'long',
+  year: 'numeric',
+});
+
 function DashboardView() {
-  const funnelData = [
-    { name: 'Novo', value: mockLeads.filter(l => l.status === 'Novo').length },
-    { name: 'Em Contato', value: mockLeads.filter(l => l.status === 'Em Contato').length },
-    { name: 'Visita Agendada', value: mockLeads.filter(l => l.status === 'Visita Agendada').length },
-    { name: 'Proposta', value: mockLeads.filter(l => l.status === 'Proposta').length },
-    { name: 'Perdido', value: mockLeads.filter(l => l.status === 'Perdido').length },
-  ];
+  const kpisQuery = useDashboardKpis();
+  const funnelQuery = useLeadsByStatus();
+  const sourceQuery = useLeadsBySource();
+  const featuredQuery = useProperties({ isFeatured: true });
 
-  const sourceData = [
-    { name: 'Google', value: 17 },
-    { name: 'Instagram', value: 17 },
-    { name: 'Facebook', value: 17 },
-    { name: 'WhatsApp', value: 17 },
-    { name: 'Indicação', value: 17 },
-    { name: 'Tráfego pago', value: 17 },
-  ];
-
-  const COLORS = ['#D4A017', '#E8C547', '#1F1F1F', '#B8860B', '#808080', '#8B6914'];
+  const kpis = kpisQuery.data;
+  const funnelData = funnelQuery.data ?? [];
+  const sourceData = sourceQuery.data ?? [];
+  const featuredProperties = (featuredQuery.data ?? []).slice(0, 6);
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">Visão geral do seu negócio - abril de 2026</p>
+        <p className="text-muted-foreground">Visão geral do seu negócio · {MONTH_NAME}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger">
@@ -289,11 +292,8 @@ function DashboardView() {
             <div className="kpi-label font-medium">Total de Leads</div>
             <div className="kpi-icon"><Users size={20} /></div>
           </div>
-          <div className="kpi-value">{mockLeads.length}</div>
-          <div className="kpi-foot flex items-center justify-between">
-            <span>Todos os tempos</span>
-            <span className="text-emerald-500 font-bold ml-1 text-[10px]">↗ +12%</span>
-          </div>
+          <div className="kpi-value">{kpis?.totalLeads ?? '—'}</div>
+          <div className="kpi-foot">Todos os tempos</div>
         </GlassCard>
 
         <GlassCard className="kpi-card kpi-card--cyan border-none">
@@ -301,11 +301,8 @@ function DashboardView() {
             <div className="kpi-label font-medium">Leads do Mês</div>
             <div className="kpi-icon"><Plus size={20} /></div>
           </div>
-          <div className="kpi-value">2</div>
-          <div className="kpi-foot flex items-center justify-between">
-            <span>Novos este mês</span>
-            <span className="text-emerald-500 font-bold ml-1 text-[10px]">↗ +2</span>
-          </div>
+          <div className="kpi-value">{kpis?.leadsThisMonth ?? '—'}</div>
+          <div className="kpi-foot">{MONTH_NAME}</div>
         </GlassCard>
 
         <GlassCard className="kpi-card kpi-card--teal border-none">
@@ -313,8 +310,10 @@ function DashboardView() {
             <div className="kpi-label font-medium">Taxa de Conversão</div>
             <div className="kpi-icon"><TrendingUp size={20} /></div>
           </div>
-          <div className="kpi-value">0.0%</div>
-          <div className="kpi-foot">0 vendas fechadas</div>
+          <div className="kpi-value">
+            {kpis ? `${kpis.conversionRate.toFixed(1)}%` : '—'}
+          </div>
+          <div className="kpi-foot">ganho / (ganho + perdido)</div>
         </GlassCard>
 
         <GlassCard className="kpi-card kpi-card--dark border-none">
@@ -322,7 +321,7 @@ function DashboardView() {
             <div className="kpi-label font-medium">Imóveis</div>
             <div className="kpi-icon"><Building2 size={20} /></div>
           </div>
-          <div className="kpi-value">{mockProperties.length}</div>
+          <div className="kpi-value">{kpis?.totalProperties ?? '—'}</div>
           <div className="kpi-foot">Cadastrados</div>
         </GlassCard>
       </div>
@@ -330,80 +329,117 @@ function DashboardView() {
       <div className="grid gap-4 md:grid-cols-2">
         <GlassCard className="border-none">
           <CardHeader>
-            <CardTitle className="font-display">Leads por Etapa do Funil</CardTitle>
+            <CardTitle className="font-display">Leads por etapa do funil</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={funnelData}>
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#E8C547" />
-                    <stop offset="100%" stopColor="#B8860B" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(232, 197, 71, 0.2)', boxShadow: 'var(--shadow-md)', background: 'var(--surface)', backdropFilter: 'blur(10px)' }}
-                  cursor={{ fill: 'rgba(139, 105, 20, 0.05)' }}
-                />
-                <Bar dataKey="value" fill="url(#barGradient)" radius={[8, 8, 4, 4]} className="dashboard-bar-chart" />
-              </BarChart>
-            </ResponsiveContainer>
+            {funnelData.length > 0 && funnelData.some((d) => d.value > 0) ? (
+              <ResponsiveContainer key="funnel-chart" width="100%" height="100%">
+                <BarChart data={funnelData}>
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#E8C547" />
+                      <stop offset="100%" stopColor="#B8860B" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                  <XAxis dataKey="label" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '12px',
+                      border: '1px solid rgba(232, 197, 71, 0.2)',
+                      boxShadow: 'var(--shadow-md)',
+                      background: 'var(--surface)',
+                      backdropFilter: 'blur(10px)',
+                    }}
+                    cursor={{ fill: 'rgba(139, 105, 20, 0.05)' }}
+                  />
+                  <Bar dataKey="value" fill="url(#barGradient)" radius={[8, 8, 4, 4]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart message={funnelQuery.isLoading ? 'Carregando…' : 'Sem leads ainda'} />
+            )}
           </CardContent>
         </GlassCard>
 
         <GlassCard className="border-none">
           <CardHeader>
-            <CardTitle className="font-display">Origem dos Leads</CardTitle>
+            <CardTitle className="font-display">Origem dos leads</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RePieChart className="pie-glow">
-                <Pie
-                  data={sourceData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {sourceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid rgba(232, 197, 71, 0.2)', backgroundColor: 'var(--surface-solid)' }} />
-                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }}/>
-              </RePieChart>
-            </ResponsiveContainer>
+            {sourceData.length > 0 ? (
+              <ResponsiveContainer key="source-chart" width="100%" height="100%">
+                <RePieChart className="pie-glow">
+                  <Pie
+                    data={sourceData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    nameKey="label"
+                    stroke="none"
+                  >
+                    {sourceData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={DASHBOARD_COLORS[index % DASHBOARD_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '12px',
+                      border: '1px solid rgba(232, 197, 71, 0.2)',
+                      backgroundColor: 'var(--surface-solid)',
+                    }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
+                </RePieChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart message={sourceQuery.isLoading ? 'Carregando…' : 'Sem leads ainda'} />
+            )}
           </CardContent>
         </GlassCard>
       </div>
 
       <GlassCard className="border-none">
         <CardHeader>
-          <CardTitle className="font-display">Empreendimentos Mais Trabalhados</CardTitle>
+          <CardTitle className="font-display">Imóveis em destaque</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {mockProperties.map((prop) => (
-              <div key={prop.id} className="prop-mini-card">
-                <div>
-                  <h4 className="font-semibold text-sm">{prop.name}</h4>
-                  <p className="text-[11px] text-muted-foreground">{prop.region}</p>
+          {featuredProperties.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum imóvel marcado como destaque. Marque o flag "Destaque" no cadastro pra aparecer aqui.
+            </p>
+          ) : (
+            <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {featuredProperties.map((prop) => (
+                <div key={prop.id} className="prop-mini-card">
+                  <div>
+                    <h4 className="font-semibold text-sm">{getPropertyTitle(prop)}</h4>
+                    <p className="text-[11px] text-muted-foreground">
+                      {prop.neighborhood}, {prop.city}
+                    </p>
+                  </div>
+                  <div className="lead-pill">
+                    <span>{getPropertyPrice(prop).replace('R$', '').trim()}</span>
+                    <span>{PROPERTY_PURPOSE_LABELS[prop.purpose]}</span>
+                  </div>
                 </div>
-                <div className="lead-pill">
-                  <span>0</span>
-                  <span>Leads</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </GlassCard>
+    </div>
+  );
+}
+
+function EmptyChart({ message }: { message: string }) {
+  return (
+    <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+      {message}
     </div>
   );
 }
