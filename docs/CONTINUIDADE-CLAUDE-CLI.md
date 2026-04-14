@@ -15,7 +15,13 @@ Se você é o **Claude CLI** lendo isso pela primeira vez no Antigravity: leia o
 2. **Regras de trabalho** (como o desenvolvedor espera que você atue) — seção 6
 3. **Próximo passo imediato** (Sub-bloco 3.2 com decisões pendentes) — seção 7
 
-Depois de ler, **leia também** o `docs/RELATORIO-PROJETO-CRM-LEANDRO.md` (versão 1.2) que contém o histórico completo e detalhado de todas as etapas anteriores. Este arquivo de continuidade é um resumo executivo; o relatório é a referência profunda.
+Depois de ler, **leia também** os 2 documentos complementares:
+
+1. **`docs/CONTINUIDADE-PROJETO-LEANDRO.md`** — **checkpoint estratégico completo** do projeto inteiro. Contém: schema SQL completo da tabela `properties` (40+ campos), análise detalhada do prompt atual da Dorinda (6 etapas + 4 problemas identificados), lições das 5 conversas do concorrente Caique Lima (o que faz bem vs mal), estrutura dos 3 workflows n8n a serem adaptados (Mariana_WhatsApp_v2, Chat_Widget_AI_v1, Mariana_FollowUp_Curto_v2), descobertas da planilha real do Leandro, cenário de integração com o site público, e os 8 passos do fluxo completo. **Leia este arquivo antes de planejar os sub-blocos 3.3+ e principalmente antes da Etapa 4 (Dorinda).**
+
+2. **`docs/RELATORIO-PROJETO-CRM-LEANDRO.md`** (versão 1.2) — histórico técnico incremental do que já foi efetivamente codado (Etapas 1, 2 e Sub-bloco 3.1). Atualizado a cada sub-bloco concluído.
+
+Este arquivo (`CONTINUIDADE-CLAUDE-CLI.md`) é um **resumo executivo focado no próximo passo imediato (Sub-bloco 3.2)**. Os outros dois são a referência profunda.
 
 ---
 
@@ -622,9 +628,13 @@ Antes de começar o 3.2, confirme mentalmente:
 
 ## 10. Referências e documentação
 
-- **Relatório completo:** `docs/RELATORIO-PROJETO-CRM-LEANDRO.md` (v1.2)
+### Documentos do projeto (fonte de verdade interna)
+- **Checkpoint estratégico completo:** `docs/CONTINUIDADE-PROJETO-LEANDRO.md` — schema SQL, Dorinda, workflows n8n, análise de concorrente, planilha, cenário de integração. **Fonte primária pra tudo relacionado a negócio e decisões de produto.**
+- **Relatório incremental (técnico):** `docs/RELATORIO-PROJETO-CRM-LEANDRO.md` (v1.2) — histórico do que foi codado em cada etapa/sub-bloco
 - **Issues conhecidas:** `docs/KNOWN-ISSUES.md`
-- **Redesign original:** `docs/00-*.md` até `10-*.md` (cuidado: estado visual antigo, atualizado depois)
+- **Redesign original:** `docs/00-*.md` até `10-*.md` (cuidado: estado visual do redesign anterior, não contém nada sobre backend)
+
+### Documentação externa
 - **TanStack Query v5:** https://tanstack.com/query/latest/docs/framework/react/overview
 - **React Hook Form:** https://react-hook-form.com/
 - **Zod 4 docs:** https://zod.dev/v4 (ATENÇÃO: não usar exemplos do Zod 3)
