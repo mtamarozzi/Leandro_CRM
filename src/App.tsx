@@ -142,6 +142,14 @@ export default function App() {
           <button className="icon-btn" aria-label="Notificações">
             <Bell size={18} />
           </button>
+          <button
+            className="icon-btn"
+            aria-label="Configurações"
+            title="Configurações"
+            onClick={() => navigate({ to: '/configuracoes' })}
+          >
+            <Settings size={18} />
+          </button>
           <div className="avatar" title={profile?.full_name ?? ''}>
             {profile?.full_name?.charAt(0).toUpperCase() ?? '?'}
           </div>
