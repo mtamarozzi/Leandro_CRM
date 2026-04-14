@@ -44,57 +44,53 @@ const optionalUuid = z.preprocess(
 );
 
 // ---------------------------------------------------------------------------
+// Schema base (sem superRefine) — usado pra criar e editar
+// ---------------------------------------------------------------------------
+
+const eventBaseShape = z.object({
+  title: z.string().trim().min(2, 'Título muito curto').max(160),
+  type: z.enum(EVENT_TYPES).default('followup'),
+  status: z.enum(EVENT_STATUSES).default('agendado'),
+  starts_at: z.string().datetime({ offset: true, message: 'Data/hora de início inválida' }),
+  ends_at: z.preprocess(
+    emptyToUndefined,
+    z.string().datetime({ offset: true, message: 'Data/hora de fim inválida' }).optional(),
+  ),
+  description: optionalText(2000),
+  location: optionalText(240),
+  reminder_minutes_before: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().nonnegative().max(10080).optional(),
+  ),
+  lead_id: optionalUuid,
+  property_id: optionalUuid,
+});
+
+const endsAfterStart = (
+  data: { starts_at?: string; ends_at?: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (data.ends_at && data.starts_at && data.starts_at > data.ends_at) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['ends_at'],
+      message: 'O fim precisa ser depois do início',
+    });
+  }
+};
+
+// ---------------------------------------------------------------------------
 // Schema de criação
 // ---------------------------------------------------------------------------
 
-export const eventCreateSchema = z
-  .object({
-    title: z.string().trim().min(2, 'Título muito curto').max(160),
-    type: z.enum(EVENT_TYPES).default('followup'),
-    status: z.enum(EVENT_STATUSES).default('agendado'),
-    starts_at: z.string().datetime({ offset: true, message: 'Data/hora de início inválida' }),
-    ends_at: z.preprocess(
-      emptyToUndefined,
-      z.string().datetime({ offset: true, message: 'Data/hora de fim inválida' }).optional(),
-    ),
-    description: optionalText(2000),
-    location: optionalText(240),
-    reminder_minutes_before: z.preprocess(
-      emptyToUndefined,
-      z.coerce.number().int().nonnegative().max(10080).optional(),
-    ),
-    lead_id: optionalUuid,
-    property_id: optionalUuid,
-  })
-  .superRefine((data, ctx) => {
-    if (data.ends_at && data.starts_at > data.ends_at) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['ends_at'],
-        message: 'O fim precisa ser depois do início',
-      });
-    }
-  });
-
+export const eventCreateSchema = eventBaseShape.superRefine(endsAfterStart);
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
 
 // ---------------------------------------------------------------------------
 // Schema de edição (campos opcionais)
 // ---------------------------------------------------------------------------
 
-export const eventUpdateSchema = eventCreateSchema
-  .innerType()
-  .partial()
-  .superRefine((data, ctx) => {
-    if (data.ends_at && data.starts_at && data.starts_at > data.ends_at) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['ends_at'],
-        message: 'O fim precisa ser depois do início',
-      });
-    }
-  });
-
+export const eventUpdateSchema = eventBaseShape.partial().superRefine(endsAfterStart);
 export type EventUpdateInput = z.infer<typeof eventUpdateSchema>;
 
 // ---------------------------------------------------------------------------
