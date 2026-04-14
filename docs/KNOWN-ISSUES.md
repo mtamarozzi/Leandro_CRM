@@ -101,6 +101,56 @@ src/routes/_authenticated.tsx(25,11): error TS2353: 'redirect' does not exist in
 
 ---
 
+## 🟡 KI-003 — Bugs de UX do wizard de imóveis (5 itens)
+
+**Descoberto em:** Sub-bloco 3.3 — teste manual do wizard em 2026-04-14
+**Componentes afetados:**
+- `components/property-wizard/PropertyWizardModal.tsx`
+- `components/property-wizard/Step1Identification.tsx`
+- `components/property-wizard/Step4ValuesPhotos.tsx`
+- `src/styles/property-wizard.css`
+- `src/App.tsx` (cards de imóveis)
+
+**Severidade:** cosmética + funcional (upload de fotos sem acesso claro)
+
+### Sintomas
+
+1. **Upload de fotos invisível após criar** — Modal mostra toast "Imóvel criado, você já pode adicionar fotos", mas o `PhotoUploader` é renderizado no final do step 4 (após todos os campos), exigindo scroll pra encontrá-lo. Usuário não descobriu onde subir as fotos.
+2. **Título "Novo imóvel" não aparece** — Header do modal está vazio onde deveria mostrar título + subtítulo. Provavelmente `var(--text-primary)` não está definida em `tokens.css` ou está igual ao background.
+3. **Selects nativos ilegíveis no dark mode** — As opções dos 3 `<select>` (Finalidade, Categoria, Situação) aparecem acinzentadas/ilegíveis no tema escuro. Browser não aplica CSS vars às options nativas.
+4. **Botão "Ver detalhes" nos cards não faz nada** — Herdado do mock original. Tela de detalhe ainda não implementada.
+5. **Setas estranhas no step bar** — Indicadores visuais (↑↓) aparecem no canto direito da barra de etapas, causados pelo `overflow-x: auto` em `.property-wizard__steps`.
+
+### Causa raiz
+
+1. PhotoUploader concatenado ao form; deveria **substituir** o conteúdo do step 4 quando `createdId` existe.
+2. Possível ausência da variável CSS `--text-primary` — fallback seguro seria `var(--foreground)` (definida em `index.css`). Também pode ser conflito de z-index com o header do dialog.
+3. Native `<select><option>` não herda `color`/`background` das CSS vars do dark theme no Chrome/Edge/Firefox. Solução: substituir pelo componente shadcn `Select` (já disponível em `components/ui/select.tsx`).
+4. Botão `btn-material` permaneceu do mockup original quando a `PropertiesView` foi refatorada.
+5. `overflow-x: auto` em container sem overflow real ativa scroll indicators nativos em alguns browsers.
+
+### Por que é aceitável agora
+
+- Criação de imóveis funciona (confirmado com `LDR-2026-0001` criado com sucesso)
+- Lista renderiza, filtros funcionam, busca funciona
+- Fotos **podem** ser adicionadas (basta scrollar), só não tem affordance clara
+- Nenhum desses bugs bloqueia o sub-bloco 3.4 (Leads + Funil)
+
+### Como resolver (sub-bloco de polish futuro)
+
+Sugestão: virar **sub-bloco 3.3.8** ou agrupar com o cleanup do 3.5. 5 fixes isolados:
+
+1. **Fotos em destaque após criar:** no `PropertyWizardModal`, quando `createdId !== null`, renderizar apenas o `PhotoUploader` dentro de step 4 (wrappear em novo componente `Step4PostCreate`).
+2. **Título:** trocar `color: var(--text-primary)` por `color: var(--foreground)` em `.property-wizard__title` e `.property-wizard__subtitle`; mesmo para `.wizard-step__title`.
+3. **Selects:** substituir os 3 `<select>` nativos no `Step1Identification` pelo `Select` do shadcn; se o 3.4 introduzir novos selects (lead.status, origin), fazer na mesma passada. Evitar native `<select>` daqui pra frente.
+4. **"Ver detalhes":** remover o botão do card em `PropertiesView` OU transformar em "Editar" quando houver fluxo de edição (sub-bloco próprio).
+5. **Step bar:** trocar `overflow-x: auto` por `flex-wrap: wrap` em `.property-wizard__steps`, ou usar `overflow-x: visible` + `scrollbar-width: none`.
+
+### Referências
+- Evidências visuais: pasta `Imagens/` (screenshots do teste de 2026-04-14)
+
+---
+
 ## Template para novos issues
 
 ```
