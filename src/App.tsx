@@ -29,13 +29,24 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useCurrentProfile } from '@/src/hooks/useCurrentProfile';
 import { useProperties } from '@/src/hooks/useProperties';
+import { useLeads } from '@/src/hooks/useLeads';
 import { PropertyWizardModal } from '@/components/property-wizard/PropertyWizardModal';
+import { NewLeadModal } from '@/components/leads/NewLeadModal';
+import { LeadDetailModal } from '@/components/leads/LeadDetailModal';
 import {
   PROPERTY_KIND_LABELS,
   PROPERTY_PURPOSE_LABELS,
   PROPERTY_STATUS_LABELS,
   type PropertyPurpose,
 } from '@/src/lib/schemas/property-schema';
+import {
+  LEAD_ORIGINS,
+  LEAD_ORIGIN_LABELS,
+  LEAD_STATUSES,
+  LEAD_STATUS_LABELS,
+  type LeadOrigin,
+  type LeadStatus,
+} from '@/src/lib/schemas/lead-schema';
 import type { Database } from '@/src/types/database';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -387,89 +398,140 @@ function DashboardView() {
   );
 }
 
+type LeadRow = Database['public']['Tables']['leads']['Row'];
+
+function formatLeadBudget(lead: LeadRow): string {
+  if (!lead.budget_min && !lead.budget_max) return '—';
+  const fmt = (v: number | null) =>
+    v?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) ??
+    '—';
+  return `${fmt(lead.budget_min)} – ${fmt(lead.budget_max)}`;
+}
+
+function formatLeadInterest(lead: LeadRow): string {
+  const parts: string[] = [];
+  if (lead.interest_purpose) parts.push(PROPERTY_PURPOSE_LABELS[lead.interest_purpose]);
+  if (lead.interest_type) parts.push(lead.interest_type);
+  return parts.join(' · ') || '—';
+}
+
+function formatLeadRegion(lead: LeadRow): string {
+  return [lead.preferred_city, lead.preferred_region].filter(Boolean).join(', ') || '—';
+}
+
+function formatLastContact(lead: LeadRow): string {
+  if (!lead.last_contact_at) return '—';
+  return new Date(lead.last_contact_at).toLocaleDateString('pt-BR');
+}
+
+function cleanPhone(phone: string): string {
+  return phone.replace(/\D+/g, '');
+}
+
 function LeadsView() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
+  const [originFilter, setOriginFilter] = useState<LeadOrigin | 'all'>('all');
+  const [newOpen, setNewOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
-  const filteredLeads = mockLeads.filter(lead => 
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phone.includes(searchTerm)
+  const filters = useMemo(
+    () => ({
+      ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+      ...(originFilter !== 'all' ? { origin: originFilter } : {}),
+      ...(searchTerm.trim() ? { search: searchTerm.trim() } : {}),
+    }),
+    [statusFilter, originFilter, searchTerm],
   );
 
-  const statusToSlug = (status: string) => {
-    const map: Record<string, string> = {
-      'Novo': 'novo',
-      'Em Contato': 'contato',
-      'Visita Agendada': 'visita',
-      'Proposta': 'proposta',
-      'Perdido': 'perdido',
-      'Ganho': 'ganho'
-    };
-    return map[status] || 'novo';
-  };
+  const leadsQuery = useLeads(filters);
+  const leads = leadsQuery.data ?? [];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-display font-bold tracking-tight">Leads</h2>
-          <p className="text-muted-foreground">{mockLeads.length} leads encontrados</p>
+          <p className="text-muted-foreground">
+            {leadsQuery.isLoading
+              ? 'Carregando…'
+              : `${leads.length} ${leads.length === 1 ? 'lead encontrado' : 'leads encontrados'}`}
+          </p>
         </div>
-        <BtnPrimary>
-          <Plus className="mr-2 h-4 w-4" /> Novo Lead
+        <BtnPrimary onClick={() => setNewOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Novo lead
         </BtnPrimary>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input 
-            placeholder="Buscar por nome ou telefone..." 
-            className="pl-10 bg-white border-none shadow-sm"
+          <Input
+            placeholder="Buscar por nome, telefone, email ou notas…"
+            className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-[180px] bg-white border-none shadow-sm">
-            <SelectValue placeholder="Todos os status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="novo">Novo</SelectItem>
-            <SelectItem value="contato">Em Contato</SelectItem>
-            <SelectItem value="visita">Visita Agendada</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-[180px] bg-white border-none shadow-sm">
-            <SelectValue placeholder="Todas as regiões" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as regiões</SelectItem>
-            <SelectItem value="sul">Zona Sul</SelectItem>
-            <SelectItem value="oeste">Zona Oeste</SelectItem>
-            <SelectItem value="centro">Centro</SelectItem>
-          </SelectContent>
-        </Select>
+        <select
+          className="h-10 rounded-md border border-input bg-transparent px-3 text-sm min-w-[180px]"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as LeadStatus | 'all')}
+        >
+          <option value="all">Todos os status</option>
+          {LEAD_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {LEAD_STATUS_LABELS[s]}
+            </option>
+          ))}
+        </select>
+        <select
+          className="h-10 rounded-md border border-input bg-transparent px-3 text-sm min-w-[180px]"
+          value={originFilter}
+          onChange={(e) => setOriginFilter(e.target.value as LeadOrigin | 'all')}
+        >
+          <option value="all">Todas as origens</option>
+          {LEAD_ORIGINS.map((o) => (
+            <option key={o} value={o}>
+              {LEAD_ORIGIN_LABELS[o]}
+            </option>
+          ))}
+        </select>
       </div>
 
+      {leadsQuery.isError && (
+        <p className="text-destructive text-sm">
+          Erro ao carregar leads: {(leadsQuery.error as Error).message}
+        </p>
+      )}
+
+      {!leadsQuery.isLoading && leads.length === 0 && (
+        <GlassCard className="p-8 text-center">
+          <p className="text-muted-foreground">
+            Nenhum lead encontrado. Clique em <strong>Novo lead</strong> para começar.
+          </p>
+        </GlassCard>
+      )}
+
       <div className="leads-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger">
-        {filteredLeads.map((lead) => (
-          <GlassCard key={lead.id} className="lead-card border-none hover:shadow-[0_8px_32px_rgba(212,160,23,0.12)] transition-all duration-300 p-5 pl-6" data-status={statusToSlug(lead.status)}>
+        {leads.map((lead) => (
+          <GlassCard
+            key={lead.id}
+            className="lead-card border-none hover:shadow-[0_8px_32px_rgba(212,160,23,0.12)] transition-all duration-300 p-5 pl-6 cursor-pointer"
+            data-status={lead.status}
+            onClick={() => setDetailId(lead.id)}
+          >
             <CardHeader className="pb-1 px-0 pt-0">
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <CardTitle className="text-base font-display">{lead.name}</CardTitle>
-                  <StatusBadge status={lead.status} className="text-[10px] px-2.5 py-1" />
+                  <span className={`tag tag--${lead.status}`}>
+                    {LEAD_STATUS_LABELS[lead.status]}
+                  </span>
                 </div>
-                <div className="flex gap-1 -mt-1 -mr-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-white/50 dark:hover:bg-black/20">
-                    <Settings className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10">
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <Badge variant="secondary" className="text-[10px]">
+                  {LEAD_ORIGIN_LABELS[lead.origin]}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-2 px-0 pb-0 mt-2">
@@ -478,40 +540,61 @@ function LeadsView() {
                   <Phone size={12} className="text-primary/70" />
                   <span className="font-medium text-foreground/80">{lead.phone}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Mail size={12} className="text-primary/70" />
-                  <span className="font-medium text-foreground/80">{lead.email}</span>
-                </div>
+                {lead.email && (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Mail size={12} className="text-primary/70" />
+                    <span className="font-medium text-foreground/80">{lead.email}</span>
+                  </div>
+                )}
                 <div className="flex gap-1.5 text-xs text-secondary pt-1">
                   <span className="w-[70px] text-muted-foreground">Interesse:</span>
-                  <strong className="text-foreground font-semibold">{lead.interest}</strong>
+                  <strong className="text-foreground font-semibold">{formatLeadInterest(lead)}</strong>
                 </div>
                 <div className="flex gap-1.5 text-xs text-secondary">
                   <span className="w-[70px] text-muted-foreground">Faixa:</span>
-                  <strong className="text-foreground font-semibold">{lead.valueRange}</strong>
+                  <strong className="text-foreground font-semibold">{formatLeadBudget(lead)}</strong>
                 </div>
                 <div className="flex gap-1.5 text-xs text-secondary">
                   <span className="w-[70px] text-muted-foreground">Região:</span>
-                  <strong className="text-foreground font-semibold">{lead.region}</strong>
+                  <strong className="text-foreground font-semibold">{formatLeadRegion(lead)}</strong>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1">
-                  <CalendarIcon size={11} className="text-primary/50" /> Último contato: {lead.lastContact}
+                  <CalendarIcon size={11} className="text-primary/50" />
+                  Último contato: {formatLastContact(lead)}
                 </div>
               </div>
 
               {lead.notes && (
-                <div className="bg-foreground/5 backdrop-blur-sm p-2 rounded-lg text-[11px] italic text-muted-foreground border border-border/50">
+                <div className="bg-foreground/5 backdrop-blur-sm p-2 rounded-lg text-[11px] italic text-muted-foreground border border-border/50 line-clamp-2">
                   <MessageSquare size={10} className="inline mr-1 text-primary/50" /> {lead.notes}
                 </div>
               )}
 
-              <BtnWhatsapp className="w-full mt-3">
+              <BtnWhatsapp
+                className="w-full mt-3"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const cleaned = cleanPhone(lead.phone);
+                  if (cleaned) window.open(`https://wa.me/55${cleaned}`, '_blank');
+                }}
+              >
                 <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> WhatsApp
               </BtnWhatsapp>
             </CardContent>
           </GlassCard>
         ))}
       </div>
+
+      <NewLeadModal
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onCreated={(id) => setDetailId(id)}
+      />
+      <LeadDetailModal
+        open={detailId !== null}
+        leadId={detailId}
+        onClose={() => setDetailId(null)}
+      />
     </div>
   );
 }
