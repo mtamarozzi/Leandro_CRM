@@ -410,7 +410,7 @@ Decisões tomadas antes da execução:
 - Logo: fica só no catálogo público (Etapa 6); topbar continua com `logo-preta.png`
 - Primeiro login: sem redirect automático — acesso só pelo menu
 
-Entregas (9 commits entre `8de83ad` e `ff78be5`):
+Entregas (11 commits entre `8de83ad` e `7dd3e26`):
 - `chore(deps)`: `react-colorful` + `sonner` instalados
 - `feat(config)`: schema Zod `workspaceUpdateSchema` com `preprocess` pra normalizar strings vazias
 - `feat(config)`: hook `useWorkspace` (query + update + upload de logo com cache-busting)
@@ -420,10 +420,13 @@ Entregas (9 commits entre `8de83ad` e `ff78be5`):
 - `feat(config)`: rota `/configuracoes` + `<Toaster />` no `__root` + CSS glassmorphism
 - `feat(config)`: botão engrenagem na topbar → `useNavigate('/configuracoes')`
 - `docs(known-issues)`: registro do KI-002
+- `feat(backend)`: hotfix 3.2.10 — adiciona coluna `phone` em `workspaces` (migration 0004) + regera types. Corrige erro "Could not find the 'phone' column" que aparecia no save — descompasso entre o plano de produto e o schema original.
 
 Bucket de logos já estava provisionado pelo `0003_storage_setup.sql` (2MB, jpeg/png/webp/svg, path `{workspace_id}/logo.{ext}`, RLS admin-only).
 
-Pendência: role `admin` no profile do user de teste precisa estar setada pra upload funcionar.
+Validação manual (2026-04-14): toast de sucesso, persistência confirmada após reload. Role `admin` do user de teste confirmada pelo desenvolvedor.
+
+**Decisão de escopo confirmada:** `primary_color` é salva no banco mas **só se aplica ao catálogo público** (Etapa 6). Os tokens visuais do CRM continuam fixos no dourado `#8B6914` em `src/index.css` para garantir consistência visual pro corretor. Tema dinâmico no CRM foi explicitamente descartado.
 
 **3.3 Migração: Empreendimentos/Imóveis**
 - Hooks completos (CRUD + media)
@@ -616,6 +619,8 @@ Branches:
 12. `feat(config): adiciona pagina WorkspaceSettings com formulario RHF e toasts` (3.2.6)
 13. `feat(config): registra rota /configuracoes com toaster e estilos glassmorphism` (3.2.7)
 14. `feat(config): adiciona botao de configuracoes na topbar` (3.2.8)
+15. `docs(relatorio): atualiza para v1.3 com conclusao do sub-bloco 3.2` (3.2.9)
+16. `feat(backend): adiciona coluna phone em workspaces e regera types` (3.2.10 hotfix)
 
 ### Estado do Supabase
 
@@ -725,5 +730,13 @@ Estado técnico do projeto:
 ---
 
 **Documento atualizado em:** 14 de abril de 2026
-**Versão do relatório:** 1.3
+**Versão do relatório:** 1.4
 **Próxima atualização:** ao fim do Sub-bloco 3.3
+
+---
+
+## 🔎 Changelog do documento
+
+- **v1.4 (2026-04-14):** registra hotfix 3.2.10 (coluna `phone` em workspaces) e decisão de escopo do `primary_color` (só catálogo público).
+- **v1.3 (2026-04-14):** conclusão do sub-bloco 3.2 (Configurações), KI-002 registrado.
+- **v1.2 (2026-04-13):** conclusão do sub-bloco 3.1 (infra React Query).
