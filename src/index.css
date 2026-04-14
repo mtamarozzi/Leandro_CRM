@@ -10,6 +10,7 @@
 @import "./styles/auth.css";
 @import "./styles/workspace-settings.css";
 @import "./styles/property-wizard.css";
+@import "./styles/leads-modals.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
