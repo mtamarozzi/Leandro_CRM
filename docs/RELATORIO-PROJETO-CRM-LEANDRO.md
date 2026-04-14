@@ -479,11 +479,30 @@ Pendências conhecidas (3.4):
 - Selects nativos novos no `NewLeadModal` e `LeadDetailModal` herdam o **KI-003 #3** (visual feio no dark mode) — fica pro polish
 - Filtro de região manual no lead (texto ilike) — sem autocomplete ainda
 
-**3.5 Dashboard + Agenda + Cleanup**
-- KPIs reais e gráficos com dados agregados
-- CRUD de eventos na agenda
-- Resolver KI-001 (Recharts)
-- Deletar `mockData.ts`, `@google/genai`, deps órfãs
+**3.5 Dashboard + Agenda + Cleanup** ✅ concluído em 2026-04-14
+
+Decisões tomadas antes da execução:
+- "Leads do mês" = mês corrente (primeiro ao último dia)
+- Taxa de conversão = `ganho / (ganho + perdido)`
+- Modal de evento completo (todos os campos numa tela)
+- Agenda em lista vertical agrupada por data (sem calendário mensal)
+- Resolver os 4 bugs restantes do KI-003 dentro deste sub-bloco
+
+Entregas (9 commits entre `caeffc4` e `c5405ca`):
+- `feat(dashboard)`: hook `useDashboard.ts` com `useDashboardKpis` (queries com `count: 'exact'` em paralelo), `useLeadsByStatus`, `useLeadsBySource`
+- `feat(dashboard)`: refatora `DashboardView` — 4 KPI cards reais, BarChart real do funil com `EmptyChart` fallback, PieChart por origem, seção "Imóveis em destaque" lendo `is_featured`. **KI-001 resolvido** (guardas + key unique).
+- `feat(agenda)`: schema Zod `event-schema.ts` + hook `useEvents.ts` com CRUD completo (list filtrada, detail, create, update, delete)
+- `feat(agenda)`: `EventModal` — form completo (title, type, status, starts_at/ends_at, reminder, lead_id, property_id, location, description), excluir integrado
+- `feat(agenda)`: refatora `AgendaView` — remove calendário mini (simplificação 4a), lista agrupada por data, click no evento abre modal em edit, EventModal integrado
+- `fix(imoveis)`: **KI-003 #1** — fotos substituem form do step 4 quando `createdId` existe (header + PhotoUploader em destaque)
+- `fix(ui)`: **KI-003 #3, #4, #5** — CSS `option` com background/color hex explícitos para dark mode, botão "Ver detalhes" removido, step bar com `flex-wrap: wrap`
+- `chore(cleanup)`: **783 linhas deletadas** — removido `src/mockData.ts`, `src/types.ts`, `components/ui/status-badge.tsx` + deps órfãs (`@google/genai`, `express`, `ffmpeg-static`, `@tanstack/router-vite-plugin`, `@types/express`) — -54 packages
+- `docs`: KI-001 e KI-003 #1/#3/#4/#5 marcados como resolvidos
+
+Pendências conhecidas (3.5):
+- KI-002 (tsc --noEmit com erros pré-existentes) — mais erros descobertos nos zod preprocess + hookform resolvers. Dev/build funcionam normal. Fica pro sub-bloco 3.6 de cleanup final.
+- Dashboard: "Imóveis em destaque" usa `is_featured` mas não tem contagem de leads vinculados por imóvel (requer JOIN) — polish futuro
+- Agenda: sem calendário visual ainda — se o Leandro pedir, vira feature nova
 
 ---
 
@@ -675,6 +694,20 @@ Branches:
 29. `feat(leads): LeadDetailModal com edicao inline e timeline de interacoes` (3.4.4)
 30. `feat(leads): refatora LeadsView com dados reais modais e filtros` (3.4.5)
 31. `feat(leads): FunnelView com dnd-kit drag optimistic e 6 colunas` (3.4.6)
+32. `docs(relatorio): atualiza para v1.6 com conclusao do sub-bloco 3.4` (3.4.7)
+33. `fix(leads): remove import conflitante de types antigos apos refatoracao` (3.4.7 hotfix)
+34. `fix(leads): adiciona CSS dos modais NewLead e LeadDetail` (3.4.8 hotfix)
+35. `fix(dialog): aumenta z-index para sobrepor topbar e limpa hacks dos titulos` (z-index hotfix)
+36. `docs(known-issues): marca KI-003 item 2 como resolvido z-index do dialog`
+37. `feat(dashboard): hooks de KPIs e charts com dados agregados` (3.5.1)
+38. `feat(dashboard): refatora DashboardView com dados reais e guarda contra unmount (KI-001)` (3.5.2)
+39. `feat(agenda): schema zod e hooks crud de events` (3.5.3)
+40. `feat(agenda): EventModal completo com todos campos e excluir` (3.5.4)
+41. `feat(agenda): refatora AgendaView com lista agrupada por data e EventModal` (3.5.5)
+42. `fix(imoveis): KI-003 #1 fotos substituem form do wizard apos criar`
+43. `fix(ui): KI-003 #3 #4 #5 selects dark mode, remove botao morto, step bar wrap`
+44. `chore(cleanup): remove mockData types antigos statusbadge e deps orfas` (3.5.6)
+45. `docs(known-issues): marca KI-001 e KI-003 #1 #3 #4 #5 como resolvidos`
 
 ### Estado do Supabase
 
@@ -718,14 +751,14 @@ Branches:
 
 ### Registradas em `docs/KNOWN-ISSUES.md`
 
-**KI-001 — Warning do Recharts**
-- Severidade: cosmética
-- Resolver em: Sub-bloco 3.5 (cleanup)
+~~**KI-001 — Warning do Recharts**~~ ✅ resolvido em 3.5.2
 
-**KI-002 — `npm run lint` (tsc --noEmit) com 5 erros pré-existentes**
+**KI-002 — `npm run lint` (tsc --noEmit) com erros pré-existentes**
 - Severidade: leve
-- Origem: tsconfig sem `vite/client` types + `strictNullChecks` desligado + breaking change do TanStack Router
-- Resolver em: sub-bloco de cleanup (sugestão 3.6). Build e dev funcionam normalmente.
+- Origem: tsconfig sem `vite/client` types + `strictNullChecks` desligado + breaking change do TanStack Router + tipagem de `z.preprocess` com `@hookform/resolvers`
+- Resolver em: sub-bloco de cleanup final (sugestão 3.6). Build e dev funcionam normalmente.
+
+**KI-003 — 5 bugs de UX** ✅ 5/5 resolvidos em 3.5.6 / dialog z-index fix
 
 ### Pendências de infraestrutura
 
@@ -776,21 +809,24 @@ Estado técnico do projeto:
 - ✅ **Design consistente:** tela de login segue o DNA visual do CRM
 - ✅ **Histórico git organizado**
 - ✅ **Dívidas técnicas registradas**
-- ✅ **Sub-blocos 3.1, 3.2, 3.3 e 3.4 concluídos** — Configurações, Imóveis com wizard + fotos, Leads com funil drag-and-drop + timeline de interações
-- 🟡 **Etapa 3 em execução:** próximo passo é o Sub-bloco 3.5 (Dashboard + Agenda + Cleanup)
+- ✅ **Sub-blocos 3.1, 3.2, 3.3, 3.4 e 3.5 concluídos** — Configurações, Imóveis, Leads, Dashboard vivo e Agenda com eventos. `mockData.ts` morto.
+- ✅ **KI-001 e KI-003 totalmente resolvidos.** KI-002 (tsc) fica pro eventual 3.6 cleanup de tipagem.
+- 🟢 **Etapa 3 concluída.** Fase A está **funcionalmente completa** do ponto de vista do CRM single-tenant.
+- ⏭ **Próximos passos:** Etapa 4 (Dorinda/n8n), Etapa 5 (chat widget), Etapa 6 (catálogo público).
 
-**Estimativa realista de conclusão da Fase A:** 2-4 semanas a partir de agora.
+**Estimativa realista de conclusão da Fase A:** foi alcançada! Falta ligar o backend da Dorinda.
 
 ---
 
 **Documento atualizado em:** 14 de abril de 2026
-**Versão do relatório:** 1.6
-**Próxima atualização:** ao fim do Sub-bloco 3.5
+**Versão do relatório:** 1.7
+**Próxima atualização:** ao fim da Etapa 4 (Dorinda backend)
 
 ---
 
 ## 🔎 Changelog do documento
 
+- **v1.7 (2026-04-14):** **Etapa 3 concluída**. Sub-bloco 3.5 com Dashboard vivo (KPIs reais + charts), AgendaView com CRUD de eventos via `EventModal`, cleanup de 783 linhas (`mockData.ts`, `types.ts`, `status-badge.tsx`, 5 deps órfãs). KI-001 e todos os 5 itens do KI-003 resolvidos.
 - **v1.6 (2026-04-14):** conclusão do sub-bloco 3.4 (Leads + Funil) — hooks com optimistic update, modais Novo/Detalhe, timeline de interações, funil com 6 colunas e drag real via `@dnd-kit`. KI-003 registrado (5 bugs do wizard de imóveis deferidos pra polish).
 - **v1.5 (2026-04-14):** conclusão do sub-bloco 3.3 (Imóveis) — wizard de 4 passos, RPC `generate_property_ref_code`, PhotoUploader, refatoração de `PropertiesView`.
 - **v1.4 (2026-04-14):** registra hotfix 3.2.10 (coluna `phone` em workspaces) e decisão de escopo do `primary_color` (só catálogo público).
