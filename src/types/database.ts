@@ -739,6 +739,35 @@ export type Database = {
           },
         ]
       }
+      property_ref_counters: {
+        Row: {
+          last_seq: number
+          updated_at: string
+          workspace_id: string
+          year: number
+        }
+        Insert: {
+          last_seq?: number
+          updated_at?: string
+          workspace_id: string
+          year: number
+        }
+        Update: {
+          last_seq?: number
+          updated_at?: string
+          workspace_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_ref_counters_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           created_at: string
@@ -787,6 +816,7 @@ export type Database = {
     }
     Functions: {
       current_workspace_id: { Args: never; Returns: string }
+      generate_property_ref_code: { Args: never; Returns: string }
     }
     Enums: {
       chat_sender_type: "visitor" | "ai" | "human" | "system"
