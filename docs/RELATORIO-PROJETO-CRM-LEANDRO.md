@@ -658,6 +658,14 @@ Branches:
 21. `feat(imoveis): adiciona 4 steps do wizard com campos condicionais` (3.3.4)
 22. `feat(imoveis): adiciona PropertyWizardModal orquestrador com 4 etapas e fotos` (3.3.5)
 23. `feat(imoveis): refatora PropertiesView para usar dados reais com filtros e wizard` (3.3.6)
+24. `docs(relatorio): atualiza para v1.5 com conclusao do sub-bloco 3.3` (3.3.7)
+25. `docs(known-issues): registra KI-003 com 5 bugs de UX do wizard de imoveis` (3.3.8 adiado)
+26. `feat(leads): adiciona schemas zod para lead e interaction` (3.4.1)
+27. `feat(leads): hooks crud com status optimistic e interactions timeline` (3.4.2)
+28. `feat(leads): adiciona NewLeadModal com form completo e validacao zod` (3.4.3)
+29. `feat(leads): LeadDetailModal com edicao inline e timeline de interacoes` (3.4.4)
+30. `feat(leads): refatora LeadsView com dados reais modais e filtros` (3.4.5)
+31. `feat(leads): FunnelView com dnd-kit drag optimistic e 6 colunas` (3.4.6)
 
 ### Estado do Supabase
 
@@ -759,21 +767,22 @@ Estado técnico do projeto:
 - ✅ **Design consistente:** tela de login segue o DNA visual do CRM
 - ✅ **Histórico git organizado**
 - ✅ **Dívidas técnicas registradas**
-- ✅ **Sub-blocos 3.1, 3.2 e 3.3 concluídos** — Configurações funcional, hooks de workspace, upload de logo, toasts globais, módulo de Imóveis com wizard de 4 passos e gestão de fotos
-- 🟡 **Etapa 3 em execução:** próximo passo é o Sub-bloco 3.4 (Leads + Funil)
+- ✅ **Sub-blocos 3.1, 3.2, 3.3 e 3.4 concluídos** — Configurações, Imóveis com wizard + fotos, Leads com funil drag-and-drop + timeline de interações
+- 🟡 **Etapa 3 em execução:** próximo passo é o Sub-bloco 3.5 (Dashboard + Agenda + Cleanup)
 
-**Estimativa realista de conclusão da Fase A:** 3-5 semanas a partir de agora.
+**Estimativa realista de conclusão da Fase A:** 2-4 semanas a partir de agora.
 
 ---
 
 **Documento atualizado em:** 14 de abril de 2026
-**Versão do relatório:** 1.5
-**Próxima atualização:** ao fim do Sub-bloco 3.4
+**Versão do relatório:** 1.6
+**Próxima atualização:** ao fim do Sub-bloco 3.5
 
 ---
 
 ## 🔎 Changelog do documento
 
+- **v1.6 (2026-04-14):** conclusão do sub-bloco 3.4 (Leads + Funil) — hooks com optimistic update, modais Novo/Detalhe, timeline de interações, funil com 6 colunas e drag real via `@dnd-kit`. KI-003 registrado (5 bugs do wizard de imóveis deferidos pra polish).
 - **v1.5 (2026-04-14):** conclusão do sub-bloco 3.3 (Imóveis) — wizard de 4 passos, RPC `generate_property_ref_code`, PhotoUploader, refatoração de `PropertiesView`.
 - **v1.4 (2026-04-14):** registra hotfix 3.2.10 (coluna `phone` em workspaces) e decisão de escopo do `primary_color` (só catálogo público).
 - **v1.3 (2026-04-14):** conclusão do sub-bloco 3.2 (Configurações), KI-002 registrado.
