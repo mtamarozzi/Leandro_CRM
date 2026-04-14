@@ -809,23 +809,24 @@ Estado técnico do projeto:
 - ✅ **Design consistente:** tela de login segue o DNA visual do CRM
 - ✅ **Histórico git organizado**
 - ✅ **Dívidas técnicas registradas**
-- ✅ **Sub-blocos 3.1, 3.2, 3.3, 3.4 e 3.5 concluídos** — Configurações, Imóveis, Leads, Dashboard vivo e Agenda com eventos. `mockData.ts` morto.
-- ✅ **KI-001 e KI-003 totalmente resolvidos.** KI-002 (tsc) fica pro eventual 3.6 cleanup de tipagem.
-- 🟢 **Etapa 3 concluída.** Fase A está **funcionalmente completa** do ponto de vista do CRM single-tenant.
+- ✅ **Sub-blocos 3.1, 3.2, 3.3, 3.4, 3.5 e 3.6 concluídos** — Configurações, Imóveis (com edição/exclusão e cover real), Leads (timeline com eventos), Dashboard vivo, Agenda com calendário+lista, sino de notificações persistente.
+- ✅ **KI-001 e KI-003 totalmente resolvidos.** KI-002 (tsc) único pendente.
+- 🟢 **Etapa 3 + polish 3.6 concluídos.** Fase A está **funcionalmente completa**.
 - ⏭ **Próximos passos:** Etapa 4 (Dorinda/n8n), Etapa 5 (chat widget), Etapa 6 (catálogo público).
 
-**Estimativa realista de conclusão da Fase A:** foi alcançada! Falta ligar o backend da Dorinda.
+**Estimativa realista de conclusão da Fase A:** alcançada! Falta ligar o backend da Dorinda.
 
 ---
 
 **Documento atualizado em:** 14 de abril de 2026
-**Versão do relatório:** 1.7
+**Versão do relatório:** 1.8
 **Próxima atualização:** ao fim da Etapa 4 (Dorinda backend)
 
 ---
 
 ## 🔎 Changelog do documento
 
+- **v1.8 (2026-04-14):** **Sub-bloco 3.6 (polish + features extras) concluído**. Bugs visuais corrigidos (textareas + filtros dark), wizard de imóvel em **modo edição**, **excluir imóvel** com soft-delete, **cover real** no card via JOIN media, timeline do lead inclui **eventos vinculados**, **sino de notificações persistente** com auto-criação ao agendar evento, calendário mensal restaurado com lista lateral.
 - **v1.7 (2026-04-14):** **Etapa 3 concluída**. Sub-bloco 3.5 com Dashboard vivo (KPIs reais + charts), AgendaView com CRUD de eventos via `EventModal`, cleanup de 783 linhas (`mockData.ts`, `types.ts`, `status-badge.tsx`, 5 deps órfãs). KI-001 e todos os 5 itens do KI-003 resolvidos.
 - **v1.6 (2026-04-14):** conclusão do sub-bloco 3.4 (Leads + Funil) — hooks com optimistic update, modais Novo/Detalhe, timeline de interações, funil com 6 colunas e drag real via `@dnd-kit`. KI-003 registrado (5 bugs do wizard de imóveis deferidos pra polish).
 - **v1.5 (2026-04-14):** conclusão do sub-bloco 3.3 (Imóveis) — wizard de 4 passos, RPC `generate_property_ref_code`, PhotoUploader, refatoração de `PropertiesView`.
