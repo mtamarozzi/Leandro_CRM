@@ -116,7 +116,7 @@ src/routes/_authenticated.tsx(25,11): error TS2353: 'redirect' does not exist in
 ### Sintomas
 
 1. **Upload de fotos invisível após criar** — Modal mostra toast "Imóvel criado, você já pode adicionar fotos", mas o `PhotoUploader` é renderizado no final do step 4 (após todos os campos), exigindo scroll pra encontrá-lo. Usuário não descobriu onde subir as fotos.
-2. **Título "Novo imóvel" não aparece** — Header do modal está vazio onde deveria mostrar título + subtítulo. Provavelmente `var(--text-primary)` não está definida em `tokens.css` ou está igual ao background.
+2. ~~**Título "Novo imóvel" não aparece**~~ — ✅ **resolvido em 2026-04-14 no commit `c487cdc`**. Causa real: `.topbar` com `z-index: 100` cobria o modal que estava em `z-50`. Fix: dialog overlay → `z-[200]`, content → `z-[201]`.
 3. **Selects nativos ilegíveis no dark mode** — As opções dos 3 `<select>` (Finalidade, Categoria, Situação) aparecem acinzentadas/ilegíveis no tema escuro. Browser não aplica CSS vars às options nativas.
 4. **Botão "Ver detalhes" nos cards não faz nada** — Herdado do mock original. Tela de detalhe ainda não implementada.
 5. **Setas estranhas no step bar** — Indicadores visuais (↑↓) aparecem no canto direito da barra de etapas, causados pelo `overflow-x: auto` em `.property-wizard__steps`.
@@ -124,7 +124,7 @@ src/routes/_authenticated.tsx(25,11): error TS2353: 'redirect' does not exist in
 ### Causa raiz
 
 1. PhotoUploader concatenado ao form; deveria **substituir** o conteúdo do step 4 quando `createdId` existe.
-2. Possível ausência da variável CSS `--text-primary` — fallback seguro seria `var(--foreground)` (definida em `index.css`). Também pode ser conflito de z-index com o header do dialog.
+2. ~~Possível ausência da variável CSS `--text-primary`~~ — diagnóstico estava errado. Causa real era z-index (ver item 2 acima, resolvido).
 3. Native `<select><option>` não herda `color`/`background` das CSS vars do dark theme no Chrome/Edge/Firefox. Solução: substituir pelo componente shadcn `Select` (já disponível em `components/ui/select.tsx`).
 4. Botão `btn-material` permaneceu do mockup original quando a `PropertiesView` foi refatorada.
 5. `overflow-x: auto` em container sem overflow real ativa scroll indicators nativos em alguns browsers.
@@ -141,7 +141,7 @@ src/routes/_authenticated.tsx(25,11): error TS2353: 'redirect' does not exist in
 Sugestão: virar **sub-bloco 3.3.8** ou agrupar com o cleanup do 3.5. 5 fixes isolados:
 
 1. **Fotos em destaque após criar:** no `PropertyWizardModal`, quando `createdId !== null`, renderizar apenas o `PhotoUploader` dentro de step 4 (wrappear em novo componente `Step4PostCreate`).
-2. **Título:** trocar `color: var(--text-primary)` por `color: var(--foreground)` em `.property-wizard__title` e `.property-wizard__subtitle`; mesmo para `.wizard-step__title`.
+2. ~~Título~~ — já resolvido (ver item 2 dos sintomas).
 3. **Selects:** substituir os 3 `<select>` nativos no `Step1Identification` pelo `Select` do shadcn; se o 3.4 introduzir novos selects (lead.status, origin), fazer na mesma passada. Evitar native `<select>` daqui pra frente.
 4. **"Ver detalhes":** remover o botão do card em `PropertiesView` OU transformar em "Editar" quando houver fluxo de edição (sub-bloco próprio).
 5. **Step bar:** trocar `overflow-x: auto` por `flex-wrap: wrap` em `.property-wizard__steps`, ou usar `overflow-x: visible` + `scrollbar-width: none`.
