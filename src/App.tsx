@@ -41,6 +41,7 @@ import {
   EVENT_TYPE_LABELS,
 } from '@/src/lib/schemas/event-schema';
 import { EventModal } from '@/components/events/EventModal';
+import { NotificationsBell } from '@/components/notifications/NotificationsBell';
 import {
   DndContext,
   PointerSensor,
@@ -178,9 +179,7 @@ export default function App() {
           >
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
-          <button className="icon-btn" aria-label="Notificações">
-            <Bell size={18} />
-          </button>
+          <NotificationsBell />
           <button
             className="icon-btn"
             aria-label="Configurações"

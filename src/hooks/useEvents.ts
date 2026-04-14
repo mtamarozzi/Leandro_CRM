@@ -7,6 +7,8 @@ import type {
   EventCreateInput,
   EventUpdateInput,
 } from '@/src/lib/schemas/event-schema';
+import { EVENT_TYPE_LABELS } from '@/src/lib/schemas/event-schema';
+import { createNotification } from './useNotifications';
 
 // ============================================================================
 // useEvents.ts — Hooks CRUD da agenda (`events`)
@@ -102,10 +104,26 @@ export function useCreateEvent() {
         .single();
       assertNoError(error);
       if (!data) throw new Error('Falha ao criar evento');
+
+      const when = new Date(data.starts_at).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      await createNotification({
+        type: 'event_reminder',
+        title: `${EVENT_TYPE_LABELS[data.type]} agendada`,
+        body: `${data.title} · ${when}`,
+        link: '/',
+        metadata: { event_id: data.id, lead_id: data.lead_id, property_id: data.property_id },
+      });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.events.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });
 }
