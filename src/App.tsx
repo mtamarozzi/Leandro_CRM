@@ -35,6 +35,12 @@ import {
   useLeadsByStatus,
   useLeadsBySource,
 } from '@/src/hooks/useDashboard';
+import { useEvents } from '@/src/hooks/useEvents';
+import {
+  EVENT_STATUS_LABELS,
+  EVENT_TYPE_LABELS,
+} from '@/src/lib/schemas/event-schema';
+import { EventModal } from '@/components/events/EventModal';
 import {
   DndContext,
   PointerSensor,
@@ -1137,11 +1143,55 @@ function PropertiesView() {
 }
 
 function AgendaView() {
-  const typeMap = (type: string) => {
-    if (type === 'Follow-up') return 'followup';
-    if (type === 'Visita') return 'visita';
-    if (type === 'Reunião') return 'reuniao';
-    return type.toLowerCase();
+  const eventsQuery = useEvents();
+  const leadsQuery = useLeads();
+  const propertiesQuery = useProperties();
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const events = eventsQuery.data ?? [];
+  const leadsById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const l of leadsQuery.data ?? []) map.set(l.id, l.name);
+    return map;
+  }, [leadsQuery.data]);
+  const propertiesById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of propertiesQuery.data ?? [])
+      map.set(p.id, `${p.ref_code ?? 'sem código'} · ${p.neighborhood}`);
+    return map;
+  }, [propertiesQuery.data]);
+
+  const eventsByDate = useMemo(() => {
+    const groups = new Map<string, typeof events>();
+    for (const ev of events) {
+      const day = new Date(ev.starts_at).toLocaleDateString('pt-BR');
+      if (!groups.has(day)) groups.set(day, []);
+      groups.get(day)!.push(ev);
+    }
+    return Array.from(groups.entries()).sort((a, b) => {
+      const parse = (s: string) => {
+        const [d, m, y] = s.split('/').map(Number);
+        return new Date(y, m - 1, d).getTime();
+      };
+      return parse(a[0]) - parse(b[0]);
+    });
+  }, [events]);
+
+  const handleOpenCreate = () => {
+    setEditingId(null);
+    setModalOpen(true);
+  };
+
+  const handleOpenEdit = (id: string) => {
+    setEditingId(id);
+    setModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setModalOpen(false);
+    setEditingId(null);
   };
 
   return (
@@ -1149,75 +1199,73 @@ function AgendaView() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Agenda</h1>
-          <p className="page-subtitle">abril de 2026</p>
+          <p className="page-subtitle">
+            {eventsQuery.isLoading
+              ? 'Carregando…'
+              : `${events.length} ${events.length === 1 ? 'evento' : 'eventos'}`}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="btn-secondary">Anterior</button>
-          <button className="btn-secondary">Hoje</button>
-          <button className="btn-secondary">Próximo</button>
-          <BtnPrimary className="ml-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Novo Evento
-          </BtnPrimary>
-        </div>
+        <BtnPrimary onClick={handleOpenCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo evento
+        </BtnPrimary>
       </div>
 
-      <div className="agenda-grid stagger">
-        <GlassCard className="cal-card border-none" data-glow="1">
-          <div className="cal-head">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Calendário
+      {eventsQuery.isError && (
+        <p className="text-destructive text-sm">
+          Erro ao carregar agenda: {(eventsQuery.error as Error).message}
+        </p>
+      )}
+
+      {!eventsQuery.isLoading && events.length === 0 && (
+        <GlassCard className="border-none">
+          <div className="p-8 text-center text-muted-foreground">
+            Nenhum evento agendado. Clique em <strong>Novo evento</strong> para começar.
           </div>
-          <div className="cal-grid">
-            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
-              <div key={day} className="cal-cell weekday">{day}</div>
-            ))}
-            {Array.from({ length: 30 }).map((_, i) => {
-              const day = i + 1;
-              const isToday = day === 10;
-              const hasEvent = mockEvents.some(e => e.date === `2026-04-${day.toString().padStart(2, '0')}`);
-              return (
-                <div key={i} className={`cal-cell ${isToday ? 'cal-cell--today' : ''}`}>
-                  <span className="cal-day">{day}</span>
-                  {hasEvent && mockEvents.filter(e => e.date === `2026-04-${day.toString().padStart(2, '0')}`).map(e => (
-                    <div key={e.id} className="event-pill" data-type={typeMap(e.type)}>
-                      {e.time} {e.title}
+        </GlassCard>
+      )}
+
+      <div className="agenda-list">
+        {eventsByDate.map(([dateStr, dayEvents]) => (
+          <GlassCard key={dateStr} className="agenda-day-card border-none">
+            <h3 className="agenda-day-title">{dateStr}</h3>
+            <ul className="agenda-day-list">
+              {dayEvents.map((ev) => {
+                const time = new Date(ev.starts_at).toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                const leadName = ev.lead_id ? leadsById.get(ev.lead_id) : null;
+                const propertyLabel = ev.property_id ? propertiesById.get(ev.property_id) : null;
+                return (
+                  <li
+                    key={ev.id}
+                    className="event-item"
+                    data-type={ev.type}
+                    onClick={() => handleOpenEdit(ev.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <span className="event-type">{EVENT_TYPE_LABELS[ev.type]}</span>
+                    <div className="event-title">{ev.title}</div>
+                    <div className="event-meta">
+                      <span>🕒 {time}</span>
+                      <span>• {EVENT_STATUS_LABELS[ev.status]}</span>
+                      {leadName && <span>👤 {leadName}</span>}
+                      {propertyLabel && <span>📍 {propertyLabel}</span>}
+                      {ev.location && <span>🗺 {ev.location}</span>}
                     </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-        </GlassCard>
-
-        <GlassCard className="upcoming-card border-none" data-glow="2">
-          <h3>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Próximos Eventos
-          </h3>
-
-          {mockEvents.slice(0, 3).map((event) => {
-            const lead = mockLeads.find(l => l.id === event.leadId);
-            const property = mockProperties.find(p => p.id === event.propertyId);
-            return (
-              <div key={event.id} className="event-item" data-type={typeMap(event.type)}>
-                <span className="event-type">{event.type}</span>
-                <div className="event-title">{event.title}</div>
-                <div className="event-meta">
-                  <span>📅 {event.date} às {event.time}</span>
-                  <span>👤 {lead?.name}</span>
-                  {property && (
-                    <span>📍 {property.name}</span>
-                  )}
-                  {event.notes && (
-                    <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>{event.notes}</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </GlassCard>
+                    {ev.description && (
+                      <p className="event-description">{ev.description}</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </GlassCard>
+        ))}
       </div>
+
+      <EventModal open={modalOpen} eventId={editingId} onClose={handleClose} />
     </div>
   );
 }
