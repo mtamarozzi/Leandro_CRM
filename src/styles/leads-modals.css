@@ -521,3 +521,40 @@
   background-color: #2D2D2D;
   color: #F5F5F5;
 }
+
+/* ============================================================================
+   3.6.1 — Interaction form em bloco (textarea grande + botão à direita)
+   ============================================================================ */
+
+.lead-detail__interaction-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.lead-detail__interaction-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lead-detail__interaction-type {
+  min-width: 140px;
+  max-width: 200px;
+}
+
+.lead-detail__interaction-text {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.lead-detail__interaction-submit {
+  align-self: flex-end;
+  justify-self: flex-end;
+  margin-left: auto;
+}
+
+.lead-detail__textarea--lg {
+  min-height: 130px;
+}

@@ -357,8 +357,8 @@ export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps)
                     <div className="lead-detail__field">
                       <label className="lead-detail__label">Observações</label>
                       <textarea
-                        rows={3}
-                        className="lead-detail__textarea"
+                        rows={6}
+                        className="lead-detail__textarea lead-detail__textarea--lg"
                         {...editForm.register('notes')}
                       />
                     </div>
@@ -399,7 +399,7 @@ export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps)
 
                 <form onSubmit={onSubmitInteraction} className="lead-detail__interaction-form">
                   <select
-                    className="lead-detail__select"
+                    className="lead-detail__select lead-detail__interaction-type"
                     {...interactionForm.register('type')}
                   >
                     {MANUAL_INTERACTION_TYPES.map((t) => (
@@ -408,13 +408,15 @@ export function LeadDetailModal({ open, leadId, onClose }: LeadDetailModalProps)
                       </option>
                     ))}
                   </select>
-                  <Input
+                  <textarea
+                    rows={3}
+                    className="lead-detail__textarea lead-detail__interaction-text"
                     placeholder="O que aconteceu? Ex.: 'Ligou interessado no Vista Park'"
                     {...interactionForm.register('content')}
                   />
                   <button
                     type="submit"
-                    className="lead-modal__btn lead-modal__btn--primary"
+                    className="lead-modal__btn lead-modal__btn--primary lead-detail__interaction-submit"
                     disabled={addInteractionMutation.isPending}
                   >
                     <Plus size={14} aria-hidden="true" /> Registrar

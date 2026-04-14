@@ -518,13 +518,13 @@ function LeadsView() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Buscar por nome, telefone, email ou notas…"
-            className="pl-10"
+            className="pl-10 bg-background"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <select
-          className="h-10 rounded-md border border-input bg-transparent px-3 text-sm min-w-[180px]"
+          className="leads-filter-select"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as LeadStatus | 'all')}
         >
@@ -536,7 +536,7 @@ function LeadsView() {
           ))}
         </select>
         <select
-          className="h-10 rounded-md border border-input bg-transparent px-3 text-sm min-w-[180px]"
+          className="leads-filter-select"
           value={originFilter}
           onChange={(e) => setOriginFilter(e.target.value as LeadOrigin | 'all')}
         >
