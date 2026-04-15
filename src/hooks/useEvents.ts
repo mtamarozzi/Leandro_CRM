@@ -143,12 +143,18 @@ export function useCreateEvent() {
         hour: '2-digit',
         minute: '2-digit',
       });
+      // Se o evento tem lembrete configurado (reminder_minutes_before), só
+      // persiste a row no sino — o popup e o beep ficam a cargo do
+      // useReminderScheduler, que dispara faltando X min para o evento.
+      // Sem lembrete configurado, notifica na hora como antes.
+      const hasReminder = (data.reminder_minutes_before ?? 0) > 0;
       await createNotification({
         type: 'event_reminder',
         title: `${EVENT_TYPE_LABELS[data.type]} agendada`,
         body: `${data.title} · ${when}`,
         link: '/',
         metadata: { event_id: data.id, lead_id: data.lead_id, property_id: data.property_id },
+        silent: hasReminder,
       });
 
       return data;
@@ -209,11 +215,89 @@ export function useDeleteEvent() {
 
   return useMutation<void, Error, string>({
     mutationFn: async (id) => {
+      // Busca o evento antes de deletar — precisamos dos metadados para
+      // possivelmente reverter o status do lead no funil.
+      const { data: event } = await supabase
+        .from('events')
+        .select('id, workspace_id, lead_id, type, title, starts_at')
+        .eq('id', id)
+        .maybeSingle();
+
       const { error } = await supabase.from('events').delete().eq('id', id);
       assertNoError(error);
+
+      if (!event || event.type !== 'visita' || !event.lead_id) return;
+
+      // Revert automático: localiza a interaction `status_change` que esse
+      // evento criou (metadata.event_id). Só reverte se o status atual do
+      // lead ainda for exatamente o "to" registrado — caso contrário o
+      // usuário já ajustou manualmente e não queremos desfazer.
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('id, status')
+        .eq('id', event.lead_id)
+        .maybeSingle();
+
+      const { data: trigger } = await supabase
+        .from('interactions')
+        .select('id, metadata, occurred_at')
+        .eq('lead_id', event.lead_id)
+        .eq('type', 'status_change')
+        .contains('metadata', { event_id: event.id })
+        .order('occurred_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const when = new Date(event.starts_at).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      if (trigger && lead) {
+        const meta = (trigger.metadata ?? {}) as {
+          from?: string | null;
+          to?: string | null;
+        };
+        const previousStatus = meta.from ?? null;
+        const currentIsExpected = lead.status === (meta.to ?? 'visita');
+
+        if (currentIsExpected && previousStatus) {
+          await supabase
+            .from('leads')
+            .update({ status: previousStatus, last_contact_at: new Date().toISOString() })
+            .eq('id', event.lead_id);
+
+          await supabase.from('interactions').insert({
+            workspace_id: event.workspace_id,
+            lead_id: event.lead_id,
+            type: 'status_change',
+            content: `Status revertido para "${previousStatus}" porque o evento de visita "${event.title}" (${when}) foi excluído.`,
+            metadata: { from: meta.to, to: previousStatus, reverted_event_id: event.id },
+            occurred_at: new Date().toISOString(),
+          });
+
+          // Apaga a interaction_change original pra não poluir a timeline.
+          await supabase.from('interactions').delete().eq('id', trigger.id);
+          return;
+        }
+      }
+
+      // Fallback conservador: status atual já foi alterado manualmente, ou
+      // não achamos a interaction gatilho. Só registra nota informativa.
+      await supabase.from('interactions').insert({
+        workspace_id: event.workspace_id,
+        lead_id: event.lead_id,
+        type: 'note',
+        content: `Evento de visita excluído ("${event.title}" · ${when}). Status do lead mantido como está — ajuste manualmente se necessário.`,
+        metadata: { deleted_event_id: event.id },
+        occurred_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.events.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     },
   });
 }

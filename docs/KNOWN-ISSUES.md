@@ -152,6 +152,39 @@ Sugestão: virar **sub-bloco 3.3.8** ou agrupar com o cleanup do 3.5. 5 fixes is
 
 ---
 
+## ✅ KI-004 — Scheduler de lembretes não respeita `reminder_minutes_before` — RESOLVIDO em 2026-04-15 (sub-bloco 3.7)
+
+**Descoberto em:** Sub-bloco 3.6 (teste manual em 2026-04-15)
+**Componentes afetados:** `src/hooks/useEvents.ts`, `src/hooks/useNotifications.ts`, novo `src/hooks/useReminderScheduler.ts`
+**Severidade:** funcional (feature parcialmente implementada)
+
+### Sintoma
+Ao criar um evento com `reminder_minutes_before` definido (ex.: lembrar 5 min antes), o popup + beep disparavam **imediatamente após salvar**, não no horário do lembrete.
+
+### Causa raiz
+`useCreateEvent` chamava `createNotification` logo após o INSERT do evento. Não havia scheduler que polasse o DB pra saber quando disparar o lembrete no momento certo. O campo `reminder_minutes_before` existia no schema mas nunca era consumido.
+
+### Fix (sub-bloco 3.7)
+1. **`useNotifications.ts`** — `createNotification` agora aceita `silent?: boolean`. Quando `silent=true`, só persiste a row da notificação no banco (pra aparecer no sino), mas pula popup + beep.
+2. **`useEvents.ts`** — `useCreateEvent` passa `silent: true` quando o evento tem `reminder_minutes_before > 0`. Sem lembrete, dispara na hora como antes.
+3. **Novo `useReminderScheduler.ts`** — hook com polling a cada 30s que:
+   - Lista eventos nas próximas 24h com `reminder_minutes_before` definido
+   - Filtra por status != `cancelado` e `realizado`
+   - Para cada evento na janela `[starts_at - reminder_minutes_before, starts_at)`, dispara `showNotificationPopup` + `playNotificationBeep`
+   - Dedup via `localStorage['crm:fired-event-reminders']` (TTL 7 dias)
+   - Re-checa no `visibilitychange` quando a aba volta a ficar visível
+4. **`_authenticated.tsx`** — monta `useReminderScheduler()` no layout autenticado.
+
+### Limitações conhecidas
+- Só funciona com aba aberta e usuário logado (não é push notification)
+- Precisão ±30s (intervalo do poll)
+- Não atravessa abas diferentes (cada aba fira seu próprio popup e grava seu próprio localStorage)
+
+### Próximo passo possível (escopo futuro)
+Scheduler backend via Supabase Edge Function + cron pra disparar notificações mesmo com o usuário offline.
+
+---
+
 ## Template para novos issues
 
 ```

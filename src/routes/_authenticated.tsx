@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { supabase } from '@/src/lib/supabase';
+import { useReminderScheduler } from '@/src/hooks/useReminderScheduler';
 
 // ============================================================================
 // _authenticated.tsx — Layout protegido
@@ -31,5 +32,6 @@ export const Route = createFileRoute('/_authenticated')({
 });
 
 function AuthenticatedLayout() {
+  useReminderScheduler();
   return <Outlet />;
 }

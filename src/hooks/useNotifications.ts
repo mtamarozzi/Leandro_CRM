@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { supabase } from '@/src/lib/supabase';
 import { queryKeys } from '@/src/lib/queryKeys';
 import { assertNoError, getCurrentWorkspaceId } from '@/src/lib/supabase-helpers';
+import { showNotificationPopup } from '@/components/notifications/NotificationPopup';
 import type { Database } from '@/src/types/database';
 
 // ============================================================================
@@ -13,6 +13,15 @@ type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 
 const NOTIFICATIONS_LIMIT = 30;
+
+const NOTIFICATION_BADGE_LABELS: Record<NonNullable<NotificationInsert['type']>, string> = {
+  new_lead: 'Lead',
+  event_reminder: 'Agenda',
+  lead_assigned: 'Lead',
+  ai_insight: 'IA',
+  ai_handoff: 'IA',
+  system: 'Sistema',
+};
 
 export function useNotifications() {
   return useQuery<NotificationRow[]>({
@@ -83,28 +92,46 @@ export interface CreateNotificationInput {
   body?: string;
   link?: string;
   metadata?: Record<string, unknown>;
+  /** Se true, insere a row no banco mas não dispara popup+beep. Usado quando o
+   *  gatilho da UI vai ser feito depois (ex.: scheduler de lembretes). */
+  silent?: boolean;
 }
 
-function playNotificationBeep() {
+let sharedAudioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (sharedAudioCtx) return sharedAudioCtx;
+  const Ctx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!Ctx) return null;
+  sharedAudioCtx = new Ctx();
+  return sharedAudioCtx;
+}
+
+export function playNotificationBeep() {
   try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.18, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.35);
-    osc.onended = () => {
-      void ctx.close();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const start = () => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
     };
+    // Chrome/Safari suspendem o AudioContext quando ele é criado após um `await`
+    // (fora do gesto inicial do usuário). `resume()` reativa na primeira vez.
+    if (ctx.state === 'suspended') {
+      void ctx.resume().then(start).catch(() => {});
+    } else {
+      start();
+    }
   } catch {
     /* alguns browsers bloqueiam autoplay até a primeira interação do usuário */
   }
@@ -133,9 +160,12 @@ export async function createNotification(input: CreateNotificationInput): Promis
     return;
   }
 
-  toast.info(input.title, {
-    description: input.body,
-    duration: 5000,
+  if (input.silent) return;
+
+  showNotificationPopup({
+    title: input.title,
+    body: input.body,
+    badge: NOTIFICATION_BADGE_LABELS[input.type],
   });
   playNotificationBeep();
 }

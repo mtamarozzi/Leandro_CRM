@@ -5,7 +5,7 @@
 **Desenvolvedor:** mtamarozzi
 **Fase atual:** Fase A — Backend (Etapa 3 em andamento, Sub-bloco 3.1 concluído)
 **Branch ativa:** `feat/backend-fase-a`
-**Versão do relatório:** 1.2
+**Versão do relatório:** 1.9
 
 ---
 
@@ -827,6 +827,7 @@ Estado técnico do projeto:
 ## 🔎 Changelog do documento
 
 - **v1.8 (2026-04-14):** **Sub-bloco 3.6 (polish + features extras) concluído**. Bugs visuais corrigidos (textareas + filtros dark), wizard de imóvel em **modo edição**, **excluir imóvel** com soft-delete, **cover real** no card via JOIN media, timeline do lead inclui **eventos vinculados**, **sino de notificações persistente** com auto-criação ao agendar evento, calendário mensal restaurado com lista lateral.
+- **v1.9 (2026-04-15):** **Bloco 1 pós-retomada concluído** — 2 bugs do sub-bloco 3.6 fechados + **sub-bloco 3.7 (scheduler de lembretes)** implementado. Bug #1: popup azul custom (`NotificationPopup` + `NotificationPopupContainer`) substitui `toast.info` do sonner por ser mais confiável; beep com `AudioContext` singleton + `resume()` pós-`await`. Bug #2: `useDeleteEvent` agora reverte automaticamente o status do lead no funil quando exclui um evento de visita, com guarda via `metadata.event_id` e comparação do status atual pra não desfazer mudança manual. Sub-bloco 3.7: novo `useReminderScheduler` com polling a cada 30s dispara popup + beep respeitando `reminder_minutes_before`, dedup via `localStorage`. KI-004 fechado.
 - **v1.7 (2026-04-14):** **Etapa 3 concluída**. Sub-bloco 3.5 com Dashboard vivo (KPIs reais + charts), AgendaView com CRUD de eventos via `EventModal`, cleanup de 783 linhas (`mockData.ts`, `types.ts`, `status-badge.tsx`, 5 deps órfãs). KI-001 e todos os 5 itens do KI-003 resolvidos.
 - **v1.6 (2026-04-14):** conclusão do sub-bloco 3.4 (Leads + Funil) — hooks com optimistic update, modais Novo/Detalhe, timeline de interações, funil com 6 colunas e drag real via `@dnd-kit`. KI-003 registrado (5 bugs do wizard de imóveis deferidos pra polish).
 - **v1.5 (2026-04-14):** conclusão do sub-bloco 3.3 (Imóveis) — wizard de 4 passos, RPC `generate_property_ref_code`, PhotoUploader, refatoração de `PropertiesView`.
