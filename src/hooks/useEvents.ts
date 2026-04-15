@@ -105,6 +105,38 @@ export function useCreateEvent() {
       assertNoError(error);
       if (!data) throw new Error('Falha ao criar evento');
 
+      // Se for evento de visita com lead vinculado, sincroniza status do lead
+      // pra "visita" e registra interaction status_change.
+      if (data.type === 'visita' && data.lead_id) {
+        const { data: leadBefore } = await supabase
+          .from('leads')
+          .select('status')
+          .eq('id', data.lead_id)
+          .maybeSingle();
+
+        const previousStatus = leadBefore?.status ?? null;
+        if (previousStatus !== 'visita' && previousStatus !== 'ganho' && previousStatus !== 'perdido') {
+          const { error: updErr } = await supabase
+            .from('leads')
+            .update({ status: 'visita', last_contact_at: new Date().toISOString() })
+            .eq('id', data.lead_id);
+          if (updErr) {
+            console.warn('[useCreateEvent] falha ao sincronizar status do lead:', updErr);
+          } else {
+            await supabase.from('interactions').insert({
+              workspace_id: workspaceId,
+              lead_id: data.lead_id,
+              type: 'status_change',
+              content: previousStatus
+                ? `Status alterado para "Visita agendada" via novo evento na agenda.`
+                : `Status definido como "Visita agendada" via novo evento na agenda.`,
+              metadata: { from: previousStatus, to: 'visita', event_id: data.id },
+              occurred_at: new Date().toISOString(),
+            });
+          }
+        }
+      }
+
       const when = new Date(data.starts_at).toLocaleString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
@@ -124,6 +156,7 @@ export function useCreateEvent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.events.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     },
   });
 }

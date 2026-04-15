@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/src/lib/supabase';
 import { queryKeys } from '@/src/lib/queryKeys';
 import { assertNoError, getCurrentWorkspaceId } from '@/src/lib/supabase-helpers';
@@ -84,6 +85,31 @@ export interface CreateNotificationInput {
   metadata?: Record<string, unknown>;
 }
 
+function playNotificationBeep() {
+  try {
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.35);
+    osc.onended = () => {
+      void ctx.close();
+    };
+  } catch {
+    /* alguns browsers bloqueiam autoplay até a primeira interação do usuário */
+  }
+}
+
 export async function createNotification(input: CreateNotificationInput): Promise<void> {
   const workspaceId = await getCurrentWorkspaceId();
   const { data: userData } = await supabase.auth.getUser();
@@ -104,5 +130,12 @@ export async function createNotification(input: CreateNotificationInput): Promis
 
   if (error) {
     console.error('[createNotification] erro ao inserir:', error);
+    return;
   }
+
+  toast.info(input.title, {
+    description: input.body,
+    duration: 5000,
+  });
+  playNotificationBeep();
 }
