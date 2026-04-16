@@ -1,196 +1,163 @@
-# 🔖 Retomada — próxima sessão (a partir de 2026-04-15)
+# Retomada — proxima sessao (a partir de 2026-04-16)
 
-> Cole esse arquivo (ou referencie) na primeira mensagem da próxima conversa.
+> Cole esse arquivo (ou referencie) na primeira mensagem da proxima conversa.
 > Ele tem TUDO que precisamos pra retomar do ponto exato em que paramos.
 
 ---
 
-## 🎯 Onde paramos
+## Onde paramos
 
 - **Branch:** `feat/backend-fase-a`
-- **Último commit:** `09b5c91` — `feat(notif): toast popup e som ao notificar mais sync evento visita ao funil`
-- **Etapa 3 + Sub-bloco 3.6 (polish/extras):** ✅ concluídos formalmente, mas com **2 bugs abertos** descobertos no teste manual final
-- **Relatório:** `docs/RELATORIO-PROJETO-CRM-LEANDRO.md` em **v1.8**
-- **Known issues:** `docs/KNOWN-ISSUES.md` — apenas KI-002 (tsc errors) ainda registrado como pendência conhecida
+- **Ultimo commit:** `256cbab` — `feat(notif): popup custom, revert de visita no delete e scheduler de lembretes`
+- **Bloco 1 pos-retomada:** CONCLUIDO. Os 2 bugs do sub-bloco 3.6 foram fechados.
+- **Sub-bloco 3.7 (scheduler de lembretes):** CONCLUIDO no mesmo commit.
+- **Relatorio:** `docs/RELATORIO-PROJETO-CRM-LEANDRO.md` em **v1.9**
+- **Known issues:** `docs/KNOWN-ISSUES.md` — KI-001, KI-003, KI-004 RESOLVIDOS. So KI-002 (tsc errors) ainda pendente.
+- **Status geral:** Etapa 3 + 3.6 + 3.7 FECHADAS. Proximo foco: **Etapa 4 — Backend da Dorinda (n8n + OpenAI + webhooks)**.
 
 ---
 
-## 🐞 Bugs em aberto (prioridade 1 ao retomar)
+## O que foi fechado hoje (2026-04-15)
 
-### Bug #1 — Sino de notificações não dispara
+### Bug #1 — popup e beep (RESOLVIDO)
+- Toast popup do sonner (`toast.info`) nao renderizava com `richColors`. Trocamos por **componente custom**:
+  - `components/notifications/NotificationPopup.tsx` — card no top-right, slideIn, ícone de sino, badge, X, auto-dismiss 8s. API imperativa `showNotificationPopup(input)` com store externo via `useSyncExternalStore`.
+  - Container montado no `src/routes/__root.tsx`. Toaster do sonner foi movido pra `bottom-right` pra nao colidir.
+  - Estilos em `src/styles/notifications.css` (secao `.notification-popup*`).
+- Beep: `AudioContext` singleton + `ctx.resume()` quando `state === 'suspended'` (resolve bloqueio do autoplay do Chrome apos `await`).
 
-**Sintoma:** ao criar evento na agenda:
-- Toast verde de sucesso aparece (ok)
-- Mas **NÃO toca o beep**, **NÃO aparece o toast popup azul** da notificação, e o **sino não pisca com badge**
+### Bug #2 — delete evento nao revertia status do lead (RESOLVIDO)
+- `useDeleteEvent` em `src/hooks/useEvents.ts` agora:
+  1. Le o evento antes de deletar.
+  2. Se `type === 'visita'` e `lead_id` existe: procura a interaction `status_change` cuja `metadata.event_id` bate.
+  3. So reverte se o status atual do lead ainda for o `metadata.to` registrado — caso contrario o Leandro ja mexeu a mao e nao queremos desfazer.
+  4. Ao reverter: aplica `from`, insere interaction explicando, apaga a interaction gatilho pra nao poluir.
+  5. Fallback conservador: se ja foi alterado, so registra nota informativa.
 
-**O que já tentei:**
-- Adicionei policy `notifications_insert_own` na migration `0006_notifications_insert_policy.sql` (aplicada)
-- `createNotification()` em `src/hooks/useNotifications.ts` agora loga erro no console se INSERT falhar
-- Implementei `playNotificationBeep()` via Web Audio API
-- `toast.info(input.title, ...)` é chamado dentro de `createNotification`
-
-**Hipóteses pra investigar amanhã (em ordem de probabilidade):**
-1. **A notification está sendo criada mas o sino não atualiza** — checar Supabase Studio → table `notifications` se a row existe
-2. **Web Audio bloqueado** — alguns browsers bloqueiam até interação. Testar com `window.AudioContext` manual no console
-3. **A função `createNotification` está dando erro silencioso por outro motivo** — abrir DevTools → Console enquanto cria evento
-4. **`toast.info` precisa de `<Toaster richColors>` configurado pra info funcionar** — verificar montagem do Toaster em `src/routes/__root.tsx`
-5. **Workspace mismatch:** policy exige `workspace_id = current_workspace_id()` mas pode haver conflito com profile
-
-**Comandos de diagnóstico:**
-```sql
--- No Supabase Studio SQL Editor, ver últimas notificações inseridas
-SELECT * FROM notifications ORDER BY created_at DESC LIMIT 10;
-
--- Ver se RLS tá bloqueando
-SELECT * FROM pg_policies WHERE tablename = 'notifications';
-```
-
-```js
-// No console do browser, depois de logado:
-const { error } = await window.supabase.from('notifications').insert({
-  workspace_id: '...', user_id: '...', type: 'system', title: 'Teste'
-});
-console.log(error);
-```
-
-### Bug #2 — Excluir evento não reverte status do lead no funil
-
-**Sintoma:** criei um evento "Visita" com lead vinculado → lead foi pra coluna "Visita agendada" (✅ sync funcionou). Aí excluí o evento → o lead **continuou em "Visita agendada"** no funil em vez de voltar pro status anterior.
-
-**Por que aconteceu:**
-- `useDeleteEvent()` (em `src/hooks/useEvents.ts`) só faz `DELETE FROM events WHERE id = ?`
-- Não tem lógica de "desfazer" a mudança de status
-
-**Caminho de fix proposto:**
-- Em `useDeleteEvent`, antes de deletar, ler o evento + sua metadata.
-- Se foi um evento de visita que mudou status (existe `interaction status_change` com `event_id` no metadata), reverter o status do lead para `from` da metadata.
-- Apagar a interaction `status_change` correlata.
-- Cuidado: se o usuário mudou o status manualmente entre a criação e a exclusão, **NÃO** reverter (verificar com timestamp ou flag).
-
-**Outra opção mais simples:** não reverter automaticamente, só registrar uma `interaction status_change` informando que o evento foi excluído, deixando pro usuário ajustar o status manualmente. Mais conservador, evita "magia" excessiva.
-
-**Decisão pendente do desenvolvedor:** revert automático ou só notificar? Recomendar opção conservadora (apenas registra interação).
+### Sub-bloco 3.7 — Scheduler de lembretes (BONUS, tambem resolvido)
+- Antes: popup disparava **imediatamente** ao salvar o evento, ignorando `reminder_minutes_before`.
+- Agora:
+  - `createNotification` ganhou flag `silent: boolean`. Se `true`, persiste a row no banco (pra sino) mas pula popup + beep.
+  - `useCreateEvent` passa `silent: true` quando `reminder_minutes_before > 0`. Sem lembrete, dispara na hora como antes.
+  - Novo hook `src/hooks/useReminderScheduler.ts` — polling a cada 30s, lista eventos das proximas 24h com `reminder_minutes_before` definido, dispara popup + beep na janela `[starts_at - reminder_minutes_before, starts_at)`. Dedup via `localStorage['crm:fired-event-reminders']` (TTL 7 dias). Re-check no `visibilitychange`.
+  - Hook montado em `src/routes/_authenticated.tsx`.
+- Testado pelo Felipe: OK, dispara no horario correto.
 
 ---
 
-## 📋 Estado funcional (o que está OK)
+## Scoping da Etapa 4 ja feito
 
-- ✅ Login / logout / sessão persistente
-- ✅ Configurações do workspace (nome, CRECI, telefone, cor primária, logo)
-- ✅ **Imóveis:** wizard 4 etapas, criar, **editar**, **excluir**, upload de fotos com cover real, filtros (purpose/busca)
-- ✅ **Leads:** modal completo de novo lead, detail com edit inline, timeline com **interactions + eventos vinculados**, filtros (status/origem/busca)
-- ✅ **Funil:** drag-and-drop com optimistic update + status_change auto na timeline; sync evento-visita → coluna "Visita agendada"
-- ✅ **Dashboard:** KPIs reais (total leads, leads do mês, conversão `ganho/(ganho+perdido)`, total imóveis), 2 charts (funil bar + origem pie), seção "Imóveis em destaque"
-- ✅ **Agenda:** calendário mensal navegável + lista de próximos eventos lateral, EventModal completo (criar/editar/excluir, vincular lead/imóvel)
-- ✅ **Sino de notificações:** componente montado na topbar com badge unread + dropdown — só falta o trigger de criação realmente funcionar (ver Bug #1)
-- ✅ Toasts globais via `sonner`
-- ✅ KI-001 e KI-003 (5 itens) totalmente resolvidos
+Analise completa dos 3 workflows do n8n (ja presentes em `docs/`):
 
----
+| Arquivo | Trigger | Funcao |
+|---|---|---|
+| `Chat_Widget_AI_v1.json` | Webhook POST `/chat-widget-message` | Recebe msg do widget do site, AI Agent responde, salva em `chat_messages`, atualiza lead |
+| `Mariana_FollowUp_Curto_v2.json` | Cron a cada 5min | Busca leads com 12min+ de silencio apos msg IA, envia follow-up via WhatsApp + Widget |
+| `Mariana_WhatsApp_v2.json` | Webhook Meta (WhatsApp Cloud) | Listener WhatsApp. Transcreve audio, OCR imagem, AI Agent responde, integra Chatwoot + Asaas |
 
-## 📦 Estrutura de arquivos relevantes pra Etapa 3
+**Tabelas usadas** entre os 3:
+- `chat_conversations` — ✅ existe no Leandro
+- `chat_messages` — ✅ existe no Leandro
+- `leads` — ✅ existe no Leandro (com campos `ai_*`)
+- `n8n_chat_histories` — ❌ **FALTA** no Leandro (storage de memoria do AI Agent do n8n)
 
-```
-src/
-├── App.tsx                              monolítico ~1300 linhas, todas as views
-├── hooks/
-│   ├── useCurrentProfile.ts             [Etapa 2]
-│   ├── useWorkspace.ts                  [3.2]
-│   ├── useProperties.ts                 [3.3 + 3.6.4 cover via JOIN media]
-│   ├── useLeads.ts                      [3.4 — optimistic + status_change]
-│   ├── useEvents.ts                     [3.5 + 3.6.6 notif auto + 3.6.7+09b5c91 sync visita]
-│   ├── useNotifications.ts              [3.6.6 + 09b5c91 toast/beep]
-│   └── useDashboard.ts                  [3.5.1]
-├── lib/
-│   ├── supabase.ts, queryClient.ts, queryKeys.ts, supabase-helpers.ts
-│   └── schemas/
-│       ├── workspace-schema.ts
-│       ├── property-schema.ts           [3.3.1 — 4 sub-schemas + completo]
-│       ├── lead-schema.ts               [3.4.1]
-│       ├── interaction-schema.ts        [3.4.1]
-│       └── event-schema.ts              [3.5.3 — base + create + update]
-├── styles/                              tokens.css + 1 css por feature
-└── routes/                              TanStack Router file-based
+**Servicos externos identificados:**
+- WhatsApp Cloud API (Meta) — Phone ID `963849233485208` no FVC
+- OpenAI API — chat + transcricao de audio
+- Supabase Postgres + Storage
+- Asaas (cobranca) — usado no workflow 3
+- Chatwoot (helpdesk) — usado no workflow 3
 
-components/
-├── ui/                                  shadcn-ish + ColorPicker, LogoUploader, PhotoUploader
-├── property-wizard/                     4 steps + PropertyWizardModal (cria/edita)
-├── leads/                               NewLeadModal + LeadDetailModal
-├── events/                              EventModal
-└── notifications/                       NotificationsBell
+**Renomeacoes necessarias** (Mariana -> Dorinda):
+- 8 ocorrencias no workflow FollowUp (frases SQL tipo "Opa, Mariana aqui...")
+- 11 ocorrencias no workflow WhatsApp (node name `Memória_Mariana` + historico)
 
-supabase/migrations/
-├── 0001_initial_schema.sql              tabelas + enums + triggers
-├── 0002_rls_policies.sql                30+ policies RLS
-├── 0003_storage_setup.sql               buckets logos/properties/avatars
-├── 0004_add_workspace_phone.sql         coluna phone (3.2.10 hotfix)
-├── 0005_property_ref_code.sql           generate_property_ref_code() RPC
-└── 0006_notifications_insert_policy.sql RLS INSERT (corrigir bug #1)
-```
+**IMPORTANTE:** o **prompt do AI Agent** NAO esta nos JSONs — fica na config do no AI Agent dentro do proprio n8n, que nao serializa.
 
 ---
 
-## 🎯 Plano sugerido pra próxima sessão
+## 5 perguntas bloqueantes pra destravar Etapa 4
 
-### Bloco 1 — Fix dos 2 bugs do polish (estimado ~1h)
+Felipe precisa responder isso antes de codar qualquer coisa da Etapa 4:
 
-1. **Bug #1 (sino):** abrir DevTools, criar evento, ver console. Se aparecer erro do `createNotification` no log, debugar. Se não aparecer e a row está no banco, problema é de invalidação de query do `useUnreadNotificationsCount`. Se a row NÃO está no banco, é RLS ainda. Roda os comandos de diagnóstico do bloco do Bug #1 acima.
-
-2. **Bug #2 (delete evento não reverte):** decidir entre revert automático ou só registrar interaction. Implementar em `useDeleteEvent`.
-
-### Bloco 2 — Próximos passos da Fase A → B
-
-Opções (escolher 1):
-
-**(a) Etapa 4 — Backend da Dorinda (n8n + OpenAI + webhooks)** ~1-2 sem
-- Duplicar 3 workflows do CRM_FVC com prefixo `[LEANDRO]`
-- Adaptar SQL pras tabelas novas
-- Reescrever prompt da Dorinda
-- Conectar n8n ao Supabase do Leandro
-- Testar fluxo end-to-end
-
-**(b) Etapa 5 — Chat widget no site** ~1 sem
-- Componente `<ChatWidget>` no `src/App.jsx` do site externo
-- Webhook → n8n → Dorinda
-- Persistência em `chat_conversations` + `chat_messages`
-
-**(c) Etapa 6 — Catálogo público no site** ~1 sem
-- Roteamento no site externo
-- Páginas `/imoveis` e `/imoveis/:id` consumindo Supabase
-- Filtros públicos
-- CTA "Falar com a Dorinda"
-
-**(d) Sub-bloco 3.7 — KI-002 cleanup do tsc** ~1-2h
-- Adicionar `vite/client` types
-- Habilitar `strictNullChecks`
-- Refatorar `_authenticated.tsx` pra `throw redirect()`
-- Investigar tipagens de `z.preprocess` + `@hookform/resolvers`
-
-**Recomendação ao retomar:** começar pelo **Bloco 1 (fix dos 2 bugs)** porque são pequenos e travam a confiança no que já está pronto. Depois ir pra **(a) Etapa 4** que é o desbloqueio mais valioso pro Leandro.
+1. **n8n hospedado onde?** Leandro e FVC compartilham a mesma instancia ou cada um tem a sua? Qual URL/host?
+2. **Asaas e Chatwoot:** o Leandro tem contas nesses servicos? Se nao, podemos **cortar essas integracoes do MVP** e focar so em WhatsApp + OpenAI + Supabase?
+3. **WhatsApp Cloud API:** Leandro ja tem Phone Number ID + token da Meta proprios? Ou vamos usar o mesmo do FVC temporariamente?
+4. **OpenAI API key:** mesma key do FVC ou separada? (custo + isolamento de contexto)
+5. **Prompt da Mariana:** me manda **texto ou screenshot** da config do no "AI Agent" nos workflows 1 e 3. Sem isso a Dorinda nao existe.
 
 ---
 
-## 🔧 Como retomar tecnicamente
+## Mini-plano de sub-blocos 4.x (a validar apos respostas)
+
+- **4.1** — Migration `n8n_chat_histories` no Supabase do Leandro
+- **4.2** — Setup de credenciais no n8n (Supabase Leandro, OpenAI, WhatsApp Meta)
+- **4.3** — Workflow 1 (Chat Widget) — duplicar, renomear, apontar pra Supabase Leandro, testar
+- **4.4** — Workflow 2 (Follow-up) — duplicar, trocar frases "Mariana" -> "Dorinda", testar cron
+- **4.5** — Workflow 3 (WhatsApp) — duplicar, decisao sobre Asaas/Chatwoot (MVP vs escopo completo), testar
+- **4.6** — Escrever o prompt da Dorinda (personalidade + regras do Leandro: CRECI 300771-F, Santos/SP, foco em imoveis residenciais)
+- **4.7** — Teste end-to-end completo (mensagem chega -> IA responde -> lead criado/atualizado -> timeline registra -> notificacao opcional)
+
+Estimativa bruta: 1 a 2 semanas dependendo das respostas.
+
+---
+
+## Estado funcional (o que esta OK)
+
+- Login / logout / sessao persistente
+- Configuracoes do workspace
+- Imoveis: wizard 4 etapas, criar, editar, excluir, upload, cover, filtros
+- Leads: modal completo, detail com edit inline, timeline com interactions + eventos, filtros
+- Funil: drag-and-drop, sync evento-visita, **revert automatico no delete** (novo hoje)
+- Dashboard: KPIs reais, 2 charts, imoveis em destaque
+- Agenda: calendario mensal + lista lateral, EventModal completo
+- **Sino de notificacoes:** badge unread + dropdown + **popup azul custom + beep** (novo hoje)
+- **Scheduler de lembretes:** respeita `reminder_minutes_before` (novo hoje)
+- Toasts globais via sonner no bottom-right (move hoje pra nao colidir com popup)
+
+---
+
+## Como retomar tecnicamente
 
 ```bash
 cd C:\Users\User\Documents\Leandro_CRM
-git status                              # confirmar limpeza
-git log --oneline -5                    # ver últimos commits, deve começar com 09b5c91
-npm run dev                             # subir o vite na :3000
+git status
+git log --oneline -5   # deve comecar com 256cbab
+npm run dev
 ```
 
-Login no CRM com o user de teste de sempre. Reproduzir o Bug #1 abrindo o DevTools (F12) → Console antes de criar um novo evento.
+Login com o user de teste de sempre. Se quiser validar o que foi feito hoje, cria um evento com `reminder_minutes_before = 2`, espera 2min, popup azul deve disparar com beep.
+
+Depois, responder as 5 perguntas bloqueantes acima pra partir pra Etapa 4.
 
 ---
 
-## 💬 Frase para colar na próxima sessão
+## Arquivos relevantes adicionados/modificados hoje
 
-> Estou continuando o desenvolvimento do CRM imobiliário do Leandro Alonso.
+**Novos:**
+- `components/notifications/NotificationPopup.tsx`
+- `src/hooks/useReminderScheduler.ts`
+
+**Modificados:**
+- `src/hooks/useNotifications.ts` — flag `silent`, export `playNotificationBeep`, AudioContext singleton, badge map
+- `src/hooks/useEvents.ts` — revert automatico em `useDeleteEvent`, `silent` em `useCreateEvent`
+- `src/routes/__root.tsx` — `<NotificationPopupContainer />` montado, Toaster em `bottom-right`
+- `src/routes/_authenticated.tsx` — `useReminderScheduler()` ativo
+- `src/styles/notifications.css` — estilos `.notification-popup*`
+- `docs/RELATORIO-PROJETO-CRM-LEANDRO.md` — v1.9 no changelog
+- `docs/KNOWN-ISSUES.md` — KI-004 marcado como RESOLVIDO
+
+---
+
+## Frase para colar na proxima sessao
+
+> Estou continuando o desenvolvimento do CRM imobiliario do Leandro Alonso.
 > Antes de fazer qualquer coisa, leia o arquivo `docs/RETOMADA-PROXIMA-SESSAO.md`
-> e me confirme que entendeu onde paramos. Depois me ajude com o **Bloco 1**
-> (fix dos 2 bugs descritos no documento).
+> e me confirme que entendeu onde paramos. Depois me ajude a iniciar a
+> **Etapa 4 (Backend da Dorinda)** a partir das 5 perguntas bloqueantes
+> listadas no documento.
 
 ---
 
-**Documento gerado em:** 14 de abril de 2026, fim da sessão
-**Próxima sessão prevista:** 15 de abril de 2026
+**Documento gerado em:** 15 de abril de 2026, fim da sessao
+**Proxima sessao prevista:** 16 de abril de 2026
