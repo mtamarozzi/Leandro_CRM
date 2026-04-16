@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# JSONs de referência local em docs/ (workflows n8n com credenciais embutidas)
+# Não devem ser commitados — são só contexto pra agentes de IA lerem localmente
+docs/*.json

@@ -631,6 +631,8 @@ Antes de começar o 3.2, confirme mentalmente:
 ### Documentos do projeto (fonte de verdade interna)
 - **Checkpoint estratégico completo:** `docs/CONTINUIDADE-PROJETO-LEANDRO.md` — schema SQL, Dorinda, workflows n8n, análise de concorrente, planilha, cenário de integração. **Fonte primária pra tudo relacionado a negócio e decisões de produto.**
 - **Relatório incremental (técnico):** `docs/RELATORIO-PROJETO-CRM-LEANDRO.md` (v1.2) — histórico do que foi codado em cada etapa/sub-bloco
+- **Plano de execução da Etapa 4 (Dorinda):** `docs/PLANO-DORINDA-ETAPA-4.md` — guia completo pra implementar o backend da Dorinda no n8n, com 5 sub-blocos planejados, análise das adaptações do prompt original, definição das tools, sistema de handoff humano e critérios de validação
+- **Prompt da Dorinda (pronto pra uso):** `docs/PROMPT-DORINDA.md` — prompt completo adaptado, pronto pra colar no AI Agent do n8n. Inclui checklist de testes obrigatórios
 - **Issues conhecidas:** `docs/KNOWN-ISSUES.md`
 - **Redesign original:** `docs/00-*.md` até `10-*.md` (cuidado: estado visual do redesign anterior, não contém nada sobre backend)
 
