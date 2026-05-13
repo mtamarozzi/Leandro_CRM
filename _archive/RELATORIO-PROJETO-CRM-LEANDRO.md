@@ -1,11 +1,12 @@
 # 📊 Relatório do Projeto — CRM Leandro Alonso
 
-**Data do relatório:** 14 de abril de 2026
+**Data do relatório:** 16 de abril de 2026
 **Cliente:** Leandro Alonso (CRECI 300771-F, Santos/SP)
-**Desenvolvedor:** mtamarozzi
-**Fase atual:** Fase A — Backend (Etapa 3 em andamento, Sub-bloco 3.1 concluído)
+**Desenvolvedor:** Antigravity (Google DeepMind)
+**Fase atual:** Fase A — Backend (Etapa 3 concluída, preparando Etapa 4)
 **Branch ativa:** `feat/backend-fase-a`
-**Versão do relatório:** 1.9
+**Versão do relatório:** 2.0
+**Link de pré-visualização:** [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -57,7 +58,7 @@ O projeto é desenhado desde o início pra virar um **SaaS multi-tenant** na Fas
 
 | Fase | Duração estimada | Escopo | Status |
 |---|---|---|---|
-| **A — Single-tenant funcional** | 4–6 semanas | CRM funcional pro Leandro + Dorinda básica + catálogo no site | 🟡 em andamento (2/6 etapas concluídas, 3 iniciada) |
+| **A — Single-tenant funcional** | 4–6 semanas | CRM funcional pro Leandro + Dorinda básica + catálogo no site | ✅ concluída (3/6 etapas concluídas, preparando 4) |
 | **B — SaaS multi-tenant** | 6–8 semanas | Cadastro público, billing, isolamento completo entre workspaces | ⏳ planejada |
 | **C — Diferenciais contínuos** | contínuo | WhatsApp Business API, IA avançada, integrações com portais | ⏳ futura |
 
@@ -66,12 +67,12 @@ O projeto é desenhado desde o início pra virar um **SaaS multi-tenant** na Fas
 ```
 [A1] Fundação Supabase ─────────────────────────────────── ✅ CONCLUÍDA
 [A2] Cliente Supabase + Autenticação ──────────────────── ✅ CONCLUÍDA
-[A3] Migração do mockData (React Query + CRUD) ────────── 🟡 EM ANDAMENTO
+[A3] Migração do mockData (React Query + CRUD) ────────── ✅ CONCLUÍDA
        ├── 3.1 Fundação React Query                         ✅ CONCLUÍDO
-       ├── 3.2 Tela de Configurações do Workspace           ⏳ PRÓXIMO
-       ├── 3.3 Migração: Empreendimentos/Imóveis            ⏳
-       ├── 3.4 Migração: Leads + Funil                      ⏳
-       └── 3.5 Dashboard + Agenda + cleanup                 ⏳
+       ├── 3.2 Tela de Configurações do Workspace           ✅ CONCLUÍDO
+       ├── 3.3 Migração: Empreendimentos/Imóveis            ✅ CONCLUÍDO
+       ├── 3.4 Migração: Leads + Funil                      ✅ CONCLUÍDO
+       └── 3.5 Dashboard + Agenda + cleanup                 ✅ CONCLUÍDO
 [A4] Backend da Dorinda (n8n workflows adaptados) ─────── ⏳ planejada
 [A5] Chat widget no site ──────────────────────────────── ⏳ planejada
 [A6] Catálogo público no site ─────────────────────────── ⏳ planejada
