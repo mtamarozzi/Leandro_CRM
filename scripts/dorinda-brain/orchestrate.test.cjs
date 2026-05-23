@@ -3,26 +3,27 @@ const { test } = require('node:test');
 const assert = require('node:assert');
 const { runConversation } = require('./orchestrate.cjs');
 
-function makeDeps(geminiSeq, rpcImpl) {
+function makeDeps(geminiSeq, rpcImpl, opts = {}) {
   // geminiSeq: array de respostas do Gemini, consumidas em ordem a cada POST generateContent
   let i = 0;
   const calls = { gemini: [], rpc: [] };
-  const httpFn = async (opts) => {
-    if (opts.url.includes('generativelanguage')) {
-      calls.gemini.push(opts.body);
+  const httpFn = async (o) => {
+    if (o.url.includes('generativelanguage')) {
+      calls.gemini.push(o.body);
       const r = geminiSeq[i++];
       if (r && r.__throw) { const e = new Error('boom'); e.statusCode = r.__throw; throw e; }
       return r;
     }
-    if (opts.url.includes('/rest/v1/rpc/')) {
-      const name = opts.url.split('/rpc/')[1];
-      calls.rpc.push({ name, body: opts.body });
-      return rpcImpl(name, opts.body);
+    if (o.url.includes('/rest/v1/rpc/')) {
+      const name = o.url.split('/rpc/')[1];
+      calls.rpc.push({ name, body: o.body });
+      return rpcImpl(name, o.body);
     }
-    if (opts.url.includes('/rest/v1/chat_messages')) {
-      return [{ sender_type: 'visitor', content: 'detalhe do LDR-2026-0002?' }];
+    if (o.url.includes('/rest/v1/chat_messages')) {
+      if (opts.historyThrows) { const e = new Error('supabase down'); e.statusCode = 500; throw e; }
+      return opts.history || [{ sender_type: 'visitor', content: 'detalhe do LDR-2026-0002?' }];
     }
-    throw new Error('url inesperada: ' + opts.url);
+    throw new Error('url inesperada: ' + o.url);
   };
   return { httpFn, calls };
 }
@@ -78,6 +79,35 @@ test('Gemini 503 → 1 retry e depois sucesso', async () => {
 test('Gemini 503 persistente → fallback handoff', async () => {
   const seq = [{ __throw: 503 }, { __throw: 503 }, { __throw: 503 }];
   const { httpFn, calls } = makeDeps(seq, () => ({ ok: true }));
+  const out = await runConversation({ ...CFG, conversationId: 'c1', httpFn });
+  assert.match(out.output, /Leandro/);
+  assert.ok(calls.rpc.some((c) => c.name === 'dorinda_notificar_corretor'));
+});
+
+test('history vazio → injeta "oi" e responde', async () => {
+  const seq = [{ candidates: [{ content: { parts: [{ text: 'Oi! Como posso ajudar?' }] } }] }];
+  const { httpFn } = makeDeps(seq, () => ({}), { history: [] });
+  const out = await runConversation({ ...CFG, conversationId: 'c1', httpFn });
+  assert.strictEqual(out.output, 'Oi! Como posso ajudar?');
+});
+
+test('múltiplos functionCalls num turno → despacha todos', async () => {
+  const seq = [
+    { candidates: [{ content: { parts: [
+      { functionCall: { name: 'consultar_imoveis', args: { p_city: 'Santos' } } },
+      { functionCall: { name: 'consultar_imovel_por_id', args: { p_identifier: 'LDR-2026-0001' } } },
+    ] } }] },
+    { candidates: [{ content: { parts: [{ text: 'Achei essas opções!' }] } }] },
+  ];
+  const { httpFn, calls } = makeDeps(seq, () => ({ ok: true }));
+  const out = await runConversation({ ...CFG, conversationId: 'c1', httpFn });
+  assert.strictEqual(out.output, 'Achei essas opções!');
+  assert.strictEqual(calls.rpc.length, 2);
+  assert.deepStrictEqual(calls.rpc.map((c) => c.name).sort(), ['dorinda_consultar_imoveis', 'dorinda_consultar_imovel_por_id']);
+});
+
+test('loadHistory falha → fallback handoff', async () => {
+  const { httpFn, calls } = makeDeps([], () => ({ ok: true }), { historyThrows: true });
   const out = await runConversation({ ...CFG, conversationId: 'c1', httpFn });
   assert.match(out.output, /Leandro/);
   assert.ok(calls.rpc.some((c) => c.name === 'dorinda_notificar_corretor'));

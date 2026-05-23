@@ -56,8 +56,13 @@ async function handoffFallback(cfg, reason) {
 }
 
 async function runConversation(cfg) {
-  const history = await loadHistory(cfg);
-  const contents = buildContents(history);
+  let contents;
+  try {
+    const history = await loadHistory(cfg);
+    contents = buildContents(Array.isArray(history) ? history : []);
+  } catch (e) {
+    return handoffFallback(cfg, 'load_history_falhou:' + (e.statusCode || e.message));
+  }
   if (!contents.length) contents.push({ role: 'user', parts: [{ text: 'oi' }] });
 
   let resp;
