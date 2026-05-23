@@ -22,13 +22,28 @@ O `toolHttpRequest` foi **abandonado** (3 bugs distintos do runtime do n8n). A D
 
 ---
 
-## 🎯 Próximo passo: sub-bloco 4.6 (validação manual dos 13 cenários)
+## 🎯 Próximo passo: sub-bloco 4.6 — 3/13 validados, 10 PENDENTES por cota
 
-Rodar o checklist de 13 cenários do `docs/PROMPT-DORINDA.md` (seção "Checklist de validação") — saudação, preço, agendamento+protocolo, handoffs (desconto/FGTS/humano), locação, imóvel reservado, "você é robô?", encerramento. Mesmo padrão de smoke: criar conversa em `ai_mode`, clicar **Execute workflow** no n8n, disparar webhook, conferir `chat_messages`/`events`/`notifications`.
+Os 13 cenários do `PROMPT-DORINDA.md` agora são rodados de forma **automatizada** pelo `scripts/dorinda-brain/scenario-runner.cjs` (cria conversa via service-role, roda o cérebro com anon igual produção, loga as RPCs + respostas; multi-turno persiste a resposta entre turnos). Não precisa de n8n/Execute workflow.
+
+**Validados em 2026-05-23 no modelo de produção (`gemini-2.5-flash`):**
+- ✅ `saudacao` — responde sem pedir nome
+- ✅ `preco` — pacote completo (preço + condomínio + IPTU, somou os mensais)
+- 👁 `pergunta_direta` — acolheu e qualificou (comprar/alugar, dorms) mas **não** chamou `consultar_imoveis` no 1º turno; defensável pelo princípio "converse, não interrogue", mas a expectativa era apresentar — **reavaliar tom com o Leandro**
+
+**10 pendentes** (`visita, desconto, fgts, humano, locacao, reservado, confusa, robo, audio, encerra`): bloqueados **só pela cota free-tier do Gemini** — `gemini-2.5-flash` tem **20 requisições/dia** na free-tier (key do Felipe), esgotada hoje. `2.0-flash` também 429; modelos lite/3.x dão 404 nessa tier. Ver `feedback_gemini_free_tier_daily_quota.md`.
+
+**Como retomar (amanhã, após reset diário ~4h BRT):**
+```
+node scripts/dorinda-brain/scenario-runner.cjs visita,desconto,fgts,humano,locacao,reservado,confusa,robo,audio,encerra 8000
+```
+(8s de espaçamento respeita o RPM; o modelo default já é `2.5-flash`.) Conferir nos logs: `agendar_visita` retorna `protocol_code=VIS-2026-NNNN`; handoffs criam `notificar_corretor` com `human_mode=true`. Limpar depois com `node scripts/dorinda-brain/cleanup-test-data.cjs --apply`.
+
+> Se quiser destravar HOJE: trocar a `GEMINI_API_KEY` por uma com billing (ou a do Leandro) no `.env.local`, rebuildar+reinjetar, e rodar o comando acima.
 
 **TODO antes de produção (4.7):**
 - Trocar `{{ $now }}` (hoje resolvido em build-time, data congelada) por cálculo de data em runtime no Code Node.
-- Trocar a Gemini key do Felipe pela do Leandro no `.env.local` e rebuildar+reinjetar.
+- Trocar a Gemini key do Felipe pela do Leandro (cota free-tier de 20/dia não sustenta produção) no `.env.local` e rebuildar+reinjetar.
 
 ---
 
@@ -39,7 +54,7 @@ Rodar o checklist de 13 cenários do `docs/PROMPT-DORINDA.md` (seção "Checklis
 - **Workflow n8n:** `[LEANDRO] Chat_Widget_AI_v1` (ID `Db1qI76NKGnJB3x6`) — **INATIVO**, host `https://n8n.hubautomacao.pro`
 - **Relatório:** `docs/RELATORIO-CONSOLIDADO.md` (atualizar p/ refletir o pivô Code Node)
 
-**Conversa de teste pendente de cleanup:** `82a1b9f7-5d10-4cf3-a31d-c485f791ccc7` (`visitor_id` começa com `smoke-e2e-`). Já incluído no SQL de cleanup abaixo.
+**Cleanup de dados de teste:** ✅ feito em 2026-05-23 via `scripts/dorinda-brain/cleanup-test-data.cjs --apply` (37 conversas `v46-*/smoke-*/int-*` + 53 mensagens + 40 notifications de fallback). Banco limpo.
 
 ---
 
