@@ -52,10 +52,14 @@ ${tools.trim()}
 ${orchestrate.trim()}
 ${HTTP_FN}
 const SYSTEM_PROMPT = ${JSON.stringify(prompt)};
+// Secrets hardcoded a partir do .env.local em build-time. Este servidor n8n bloqueia o acesso
+// a variáveis de ambiente no Code Node (N8N_BLOCK_ENV_ACCESS_IN_NODE), e o acesso lança exceção
+// no proxy antes de qualquer try/catch — por isso aqui só usamos consts hardcoded. Pra trocar a
+// key (ex.: Gemini do Leandro pré-deploy): edita .env.local, rebuilda e re-injeta.
 const cfg = {
-  geminiKey: ($env.GEMINI_API_KEY || ${JSON.stringify(env.GEMINI_API_KEY)}),
+  geminiKey: ${JSON.stringify(env.GEMINI_API_KEY)},
   supabaseUrl: ${JSON.stringify(env.VITE_SUPABASE_URL)},
-  anon: ($env.SUPABASE_LEANDRO_ANON_KEY || ${JSON.stringify(env.VITE_SUPABASE_ANON_KEY)}),
+  anon: ${JSON.stringify(env.VITE_SUPABASE_ANON_KEY)},
   model: 'models/gemini-2.5-flash',
   maxIter: 6,
   systemPrompt: SYSTEM_PROMPT,
