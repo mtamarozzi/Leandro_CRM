@@ -7,6 +7,10 @@ const { FUNCTION_DECLARATIONS } = require('./tools.cjs');
 
 const FALLBACK_TEXT = 'Tive um probleminha aqui pra puxar essa informação, mas já vou chamar o Leandro pra te ajudar direto, tá? Um instante 🙏';
 
+// Tools de escrita que aceitam p_conversation_id. O LLM não conhece o conversation_id,
+// então o cérebro injeta o valor real do cfg (sobrescreve o que o Gemini tenha posto).
+const CONV_TOOLS = new Set(['criar_lead', 'agendar_visita', 'notificar_corretor']);
+
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 async function geminiGenerate(cfg, contents) {
@@ -80,8 +84,10 @@ async function runConversation(cfg) {
     contents.push(modelContent);
     const responseParts = [];
     for (const fc of functionCalls) {
+      const args = { ...(fc.args || {}) };
+      if (CONV_TOOLS.has(fc.name) && cfg.conversationId) args.p_conversation_id = cfg.conversationId;
       let result;
-      try { result = await callRpc(cfg, fc.name, fc.args); }
+      try { result = await callRpc(cfg, fc.name, args); }
       catch (e) { result = { ok: false, error: 'rpc_http_error', message: String(e.statusCode || e.message) }; }
       responseParts.push({ functionResponse: { name: fc.name, response: result } });
     }

@@ -112,3 +112,26 @@ test('loadHistory falha → fallback handoff', async () => {
   assert.match(out.output, /Leandro/);
   assert.ok(calls.rpc.some((c) => c.name === 'dorinda_notificar_corretor'));
 });
+
+test('injeta conversation_id nos tools de escrita (sobrescreve o do Gemini)', async () => {
+  const seq = [
+    { candidates: [{ content: { parts: [{ functionCall: { name: 'agendar_visita', args: { p_property_id: 'x', p_conversation_id: 'alucinado' } } }] } }] },
+    { candidates: [{ content: { parts: [{ text: 'Visita confirmada VIS-2026-0001' }] } }] },
+  ];
+  const { httpFn, calls } = makeDeps(seq, () => ({ ok: true, protocol_code: 'VIS-2026-0001' }));
+  await runConversation({ ...CFG, conversationId: 'conv-xyz', httpFn });
+  const call = calls.rpc.find((c) => c.name === 'dorinda_agendar_visita');
+  assert.strictEqual(call.body.p_conversation_id, 'conv-xyz');
+  assert.strictEqual(call.body.p_property_id, 'x'); // preserva os demais args do Gemini
+});
+
+test('NÃO injeta conversation_id em tools read-only', async () => {
+  const seq = [
+    { candidates: [{ content: { parts: [{ functionCall: { name: 'consultar_imoveis', args: { p_city: 'Santos' } } }] } }] },
+    { candidates: [{ content: { parts: [{ text: 'achei' }] } }] },
+  ];
+  const { httpFn, calls } = makeDeps(seq, () => ({ ok: true, results: [] }));
+  await runConversation({ ...CFG, conversationId: 'conv-xyz', httpFn });
+  const call = calls.rpc.find((c) => c.name === 'dorinda_consultar_imoveis');
+  assert.strictEqual(call.body.p_conversation_id, undefined);
+});
