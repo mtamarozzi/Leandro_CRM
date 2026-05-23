@@ -5,10 +5,10 @@
 > `CONTINUIDADE-PROJETO-LEANDRO.md`, `RETOMADA-PROXIMA-SESSAO.md`,
 > `HANDOFF.md`, `PLANO-CORRECOES-FINAIS.md`, `WEBAPP AUDITOR + CONTINUIDADE.md`.
 >
-> **Versão:** 1.0 (consolidação) — gerado em 2026-05-13
+> **Versão:** 1.3 — atualizado em 2026-05-22 (fim do dia — sub-bloco 4.4 fechado, 4.5 com tools configuradas, smoke e2e pendente)
 > **Branch atual:** `feat/backend-fase-a`
-> **Último commit:** `0a5649c docs(dorinda): adiciona prompt adaptado e prepara retomada etapa 4`
-> **Status global:** Fase A funcionalmente completa no frontend. Próximo foco: Etapa 4 (backend Dorinda).
+> **Último commit:** `270cfd1 docs: adiciona CLAUDE.md com regras context-mode e prompt glassmorphism` *(commit desta sessão pendente)*
+> **Status global:** Fase A funcionalmente completa no frontend. **Sub-blocos 4.1 + 4.2 + 4.3 + 4.4 fechados.** Sub-bloco **4.5 em andamento**: 5 HTTP Tools criadas no workflow apontando pras RPCs, smoke e2e bloqueado por 503 temporário do Gemini no último teste. Próximo foco: repetir smoke e2e + validação manual do prompt (4.6) + ativar workflow (4.7).
 
 ---
 
@@ -233,7 +233,7 @@ Isolamento entre `CRM_Leandro` e `CRM_FVC`:
 | **Notificações (sino)** | OK | Badge unread, dropdown persistente, auto-criação ao agendar evento |
 | **Popup de notificação** | OK | `NotificationPopup` custom (substitui `toast.info`), beep com `AudioContext` singleton + `resume()` pós-`await` |
 | **Scheduler de lembretes** | OK | `useReminderScheduler` com polling de 30s, respeita `reminder_minutes_before`, dedup via `localStorage` (TTL 7 dias), re-check em `visibilitychange` |
-| **Dorinda (backend)** | Não iniciado | Próxima etapa |
+| **Dorinda (backend)** | Em andamento | Workflow `[LEANDRO] Chat_Widget_AI_v1` no n8n. **Pivô 2026-05-23:** `toolHttpRequest`/`AI Agent` abandonados (3 bugs de runtime do n8n) → **Code Node único (`Dorinda Brain`)** com function-calling manual do Gemini despachando pras 5 RPCs. RPCs aplicadas (migration `0008`, smoke isolado 13/13). **Smoke e2e PASSOU** em 2026-05-23 (execution `34384`, pipeline completo persistindo em `chat_messages`). Falta validação manual dos 13 cenários (4.6) + ativação (4.7). Ver [[project-dorinda-codenode]] |
 | **Catálogo público** | Não iniciado | Etapa 6 |
 
 ---
@@ -267,16 +267,32 @@ Eventos extras pós-3.6/3.7 (commit `256cbab`):
 - Bug #2: `useDeleteEvent` reverte status do lead automaticamente quando deleta evento `type === 'visita'`, validando `metadata.event_id` e o status atual antes (não desfaz ação manual posterior)
 - KI-004 fechado
 
+### Etapa 4 — Backend da Dorinda (em andamento)
+
+| Sub-bloco | Entrega | Commit/Data |
+|---|---|---|
+| 4.1 | Migration `0007_n8n_chat_histories.sql` (memória do AI Agent) | `9f0f14c` |
+| 4.2 | Credentials no n8n: Gemini do Felipe + `Supabase Leandro - Postgres` (com "Ignore SSL Issues") | 2026-05-13 |
+| 4.3 | Workflow `[LEANDRO] Chat_Widget_AI_v1` (ID `Db1qI76NKGnJB3x6`) reconfigurado: trocado LLM OpenAI → Gemini 2.5 Flash, aplicado prompt Dorinda no AI Agent, ajustado `Preparar Resposta` (sender_name `Mariana` → `Dorinda`), sticky note reescrita. **Smoke test end-to-end passou** (webhook → Extrair Dados → Verificar Status → IA ativa? → Pausa → AI Agent → INSERT chat_messages) | 2026-05-13 |
+| 4.4 | Migration `0008_dorinda_rpcs.sql` com **5 RPCs** (`dorinda_consultar_imoveis`, `dorinda_consultar_imovel_por_id`, `dorinda_criar_lead`, `dorinda_agendar_visita`, `dorinda_notificar_corretor`) + 5 helpers (`dorinda_default_workspace_id`, `dorinda_owner_user_id`, `dorinda_next_protocol_code`, `dorinda_normalize_phone`, `dorinda_format_ptbr`) + sequence `dorinda_protocol_seq` (formato `VIS-YYYY-NNNN`) + índice funcional `leads_phone_normalized_idx`. Contrato em `docs/04-DORINDA-TOOLS-CONTRACT.md` (v0.2). **Smoke test PowerShell em 13 cenários: 13/13 OK** (`scripts/smoke-dorinda-rpcs.ps1`). Geraram dados no banco: lead `ca3d0da2-...`, evento `4743a25a-...`, protocolo `VIS-2026-0001`, 2 notificações | 2026-05-22 |
+| 4.5 | 5 HTTP Tools (`@n8n/n8n-nodes-langchain.toolHttpRequest` v1.1) adicionadas ao AI Agent via MCP (`mcp__n8n__n8n_update_partial_workflow`). Credential nova `Supabase Leandro REST API` (ID `apAhEeV5kqbOos6c`, tipo Header Auth, `Authorization: Bearer <anon>` + header `apikey` inline). **Bug do n8n descoberto e contornado**: `sendHeaders: true` autopreenchia `parametersHeaders.values: [{}]` (objeto vazio) que virava `properties[""]` no schema do Gemini → erro `key cannot be empty`. Fix: setar `parametersHeaders.values: []` desde a criação. Tools recriadas do zero com config minimal (placeholders reduzidos). **Smoke e2e bloqueado por 503 do Gemini (provider temporário, não bug nosso)** | 2026-05-22 (esta sessão) |
+
 ---
 
 ## 7. Decisões de produto consolidadas
 
 ### Dorinda (agente IA)
-- Nome **Dorinda** (a do `CRM_FVC` é "Mariana" — projetos isolados)
+- Nome **Dorinda** (a do `CRM_FVC` é "Mariana" — projetos isolados; **prompt e workflows da Mariana NÃO são reaproveitados**)
 - Atua 80% sozinha; handoff humano em casos definidos
 - **Coleta nome completo só no final** da conversa (decisão baseada em análise de concorrente real — converte mais)
 - Fase A: somente chat widget do site; WhatsApp manual via `wa.me/`
-- Fase C: WhatsApp Business API
+- Fase C: avaliar WhatsApp Business API (sem compromisso)
+- **Provider LLM:** Google Gemini `models/gemini-2.5-flash` (com key provisória do Felipe; trocar pela do Leandro antes do deploy público)
+
+### Exclusões permanentes de escopo
+- **Asaas** (cobrança/billing) — fora de escopo em todas as fases
+- **Chatwoot** (omnichannel) — fora de escopo em todas as fases
+- Cobranças no setor imobiliário do Leandro rodam por boleto bancário/financiamento direto; o CRM próprio cumpre o papel de timeline/handoff humano que justificaria o Chatwoot no FVC
 
 ### Imóveis
 - Tabela única `properties` com discriminador `purpose` (venda/aluguel)
@@ -349,61 +365,109 @@ M docs/RELATORIO-PROJETO-CRM-LEANDRO.md   (será arquivado)
 
 ### Visão geral
 
-Trazer para o `CRM_Leandro` os 3 workflows que hoje rodam para a Mariana
-no `CRM_FVC`, **renomeados com prefixo `[LEANDRO]`**, apontando para a
-instância Supabase do Leandro e com o prompt da Dorinda.
+A Etapa 4 entrega o backend da Dorinda no n8n: um workflow que recebe mensagens do widget de chat do site, conversa via AI Agent (Google Gemini), consulta o catálogo e a base de leads do Supabase do Leandro, e devolve a resposta pelo Realtime do Supabase.
 
-| Workflow | Trigger | Função |
-|---|---|---|
-| `Chat_Widget_AI_v1.json` | Webhook POST `/chat-widget-message` | Recebe msg do widget do site, AI Agent responde, salva em `chat_messages`, atualiza lead |
-| `Mariana_FollowUp_Curto_v2.json` | Cron a cada 5 min | Busca leads com 12 min+ de silêncio após mensagem da IA, envia follow-up |
-| `Mariana_WhatsApp_v2.json` | Webhook Meta (WhatsApp Cloud) | Listener WhatsApp; transcreve áudio, OCR imagem, AI Agent responde; integra Chatwoot + Asaas |
+O escopo da fase foi reduzido em 2026-05-13: **WhatsApp Cloud API, Asaas e Chatwoot estão fora**; o canal único da Dorinda na Fase A é o widget do site. Os workflows da Mariana (`CRM_FVC`) **não são reaproveitados** — o `[LEANDRO] Chat_Widget_AI_v1` é o único workflow ativo do projeto.
 
-### Tabelas usadas (já existem no Leandro, exceto uma)
+### Tabelas usadas (todas no Supabase do Leandro)
 
-- `chat_conversations` — existe
-- `chat_messages` — existe
-- `leads` (com campos `ai_*`) — existe
-- `n8n_chat_histories` — **falta** (memória do AI Agent do n8n)
+- `chat_conversations` — conversas do widget, com campo `status` (`ai_mode` / `human_mode`)
+- `chat_messages` — histórico visível ao visitante (sender_type: `visitor` / `ai` / `agent`)
+- `leads` (com campos `ai_*`) — criados/atualizados pelas tools
+- `n8n_chat_histories` — memória do AI Agent do n8n (migration `0007`)
 
-### Sub-blocos planejados
+### Ficha técnica do workflow Dorinda (estado em 2026-05-22)
 
-| Sub-bloco | Entrega |
+Fonte única de verdade dos parâmetros do workflow. Atualizar aqui ao mudar qualquer credential, modelo ou ID.
+
+| Campo | Valor |
 |---|---|
-| 4.1 | Migration `n8n_chat_histories` no Supabase do Leandro |
-| 4.2 | Credenciais no n8n: Supabase Leandro, OpenAI, WhatsApp Meta |
-| 4.3 | Workflow 1 (Chat Widget) — duplicar, renomear, apontar Supabase, testar |
-| 4.4 | Workflow 2 (Follow-up) — duplicar, trocar "Mariana" por "Dorinda", testar cron |
-| 4.5 | Workflow 3 (WhatsApp) — duplicar; decidir escopo Asaas/Chatwoot (MVP vs completo) |
-| 4.6 | Prompt da Dorinda no AI Agent (já em `docs/PROMPT-DORINDA.md`) |
-| 4.7 | Teste end-to-end: mensagem → IA → lead criado/atualizado → timeline → notificação |
+| **Workflow** | `[LEANDRO] Chat_Widget_AI_v1` |
+| **Workflow ID** | `Db1qI76NKGnJB3x6` |
+| **Host n8n (UI/API)** | `https://n8n.hubautomacao.pro` |
+| **Host de webhooks** | `https://webhook.hubautomacao.pro` |
+| **Webhook de teste** | `https://webhook.hubautomacao.pro/webhook-test/c8590ef1-14e1-4d99-87ab-91521e7b63c2` |
+| **Nós** | 21 (13 ativos do fluxo + `Dorinda Brain` Code Node; 8 nós antigos do AI Agent **desabilitados**, não deletados) |
+| **Status do workflow** | **Inativo** (ativa só na 4.6/4.7) |
+| **Arquitetura da IA** | **Code Node `Dorinda Brain`** (pivô 2026-05-23) — function-calling manual contra Gemini REST, despacha pras 5 RPCs. Substituiu `AI Agent`+`toolHttpRequest`. Ver [[project-dorinda-codenode]] |
+| **Estado funcional** | Smoke e2e **PASSOU** em 2026-05-23 (execution `34384`: webhook → Extrair Dados → Verificar Status → IA ativa? → Pausa → **Dorinda Brain** → Preparar Resposta → INSERT `chat_messages`). Smoke anterior do esqueleto sem tools havia passado em 2026-05-13 |
+| **LLM provider** | Google Gemini (via nó n8n LangChain) |
+| **Modelo** | `models/gemini-2.5-flash` |
+| **Temperature** | `0.3` |
+| **Credential Gemini** | API key **do Felipe** (provisória — trocar pela do Leandro antes do deploy público — ver [[project-dorinda-llm]]) |
+| **Credential Postgres** | `Supabase Leandro - Postgres` (ID `NsidJAj8nAf1iyRL`), SSL `require` com **Ignore SSL Issues** marcado (resolveu `self-signed certificate in certificate chain`) |
+| **Prompt do AI Agent** | `docs/PROMPT-DORINDA.md` (System Message — colado direto no campo do nó AI Agent; o cabeçalho do arquivo menciona GPT-4o por engano, ignorar) |
+| **Memória da conversa** | `chat_messages` no Supabase (o `Dorinda Brain` carrega o histórico via REST anon). `n8n_chat_histories` (migration `0007`) ficou **dormente** com o pivô |
+| **Sender renomeado** | Nó `Preparar Resposta`: `sender_name` `Mariana` → `Dorinda`; INSERT agora inclui `workspace_id` via subquery (chat_messages é NOT NULL) |
+| **Tools (5 RPCs)** | Invocadas pelo `Dorinda Brain` via function-calling manual: `dorinda_consultar_imoveis`, `_consultar_imovel_por_id`, `_criar_lead`, `_agendar_visita`, `_notificar_corretor` |
+| **Secrets no Code Node** | Hardcoded no jsCode (build-time do `.env.local`) — servidor bloqueia `$env` no Code Node. Ver [[n8n-codenode-env-blocked]] |
+| **Isolamento do CRM_FVC** | Mesma instância n8n, separação via prefixo `[LEANDRO]` no nome + credentials dedicadas |
+
+> Memória correspondente: [[project-dorinda-workflow]] (lookup rápido sem precisar abrir este relatório).
+
+### Sub-blocos
+
+| Sub-bloco | Entrega | Status |
+|---|---|---|
+| 4.1 | Migration `n8n_chat_histories` no Supabase do Leandro | ✅ commit `9f0f14c` |
+| 4.2 | Credentials no n8n (Gemini + Supabase Leandro Postgres) | ✅ 2026-05-13 |
+| 4.3 | Workflow Chat Widget: trocar OpenAI por Gemini, aplicar prompt Dorinda, ajustar `Preparar Resposta` (Mariana → Dorinda), smoke test e2e via webhook | ✅ 2026-05-13 |
+| 4.4 | RPCs Supabase + smoke test isolado (migration `0008_dorinda_rpcs.sql`, 5 RPCs + 5 helpers + sequence + índice; smoke PowerShell 13/13 OK) | ✅ 2026-05-22 |
+| 4.5 | **Pivô para Code Node** (`Dorinda Brain`): `toolHttpRequest`/`AI Agent` abandonados após 3 bugs de runtime do n8n; function-calling manual do Gemini despachando pras 5 RPCs. Código testável em `scripts/dorinda-brain/` (20/20). **Smoke e2e PASSOU** (execution `34384`). Spec/plano em `docs/superpowers/` | ✅ 2026-05-23 |
+| 4.6 | Validação manual do prompt — checklist de 13 cenários em `docs/PROMPT-DORINDA.md` | pendente |
+| 4.7 | Ativar workflow `[LEANDRO] Chat_Widget_AI_v1` em produção, apontar o widget do site para o webhook production | pendente |
+| 4.8 | (opcional, fora da Fase A) Workflow de follow-up automático — sem reaproveitar o `Mariana_FollowUp_Curto`, projetar do zero se entrar em escopo | parking lot |
+| ~~4.9~~ | ~~Workflow WhatsApp~~ — fora de escopo na Fase A (ver seção 7) | ❌ removido |
+
+### Limpeza pendente no workflow
+
+Herança da duplicação do template Mariana, **não afeta** a operação da Dorinda mas pode ser removida quando der:
+
+- Branch `Tem #DADOS_COLETADOS?` → `Extrair Dados Lead`: lógica do fluxo Limpa Nome (tag de texto). A Dorinda usa tools, não tags — esses 2 nós ficam dormentes.
 
 ### Prompt da Dorinda
 
-Pronto para colar no campo "System Message" do AI Agent no n8n. Está em
-`docs/PROMPT-DORINDA.md`. Resumo:
+Aplicado no AI Agent do workflow (`docs/PROMPT-DORINDA.md`). Resumo:
 
-- Identidade: atende pelo Leandro Alonso, CRECI 300771-F, litoral de SP
+- Identidade: Dorinda, atende pelo Leandro Alonso, CRECI 300771-F, litoral de SP
 - Tom: humano, paulista litorâneo, sem soar robótica
-- 5 princípios fundamentais (com destaque: não pede nome no início)
-- Tools previstas: `consultar_imoveis`, `consultar_imovel_por_id`, `agendar_visita`
+- 5 princípios (destaque: não pede nome no início)
+- Tools previstas (a configurar na 4.4): `consultar_imoveis`, `consultar_imovel_por_id`, `criar_lead`, `agendar_visita`, `notificar_corretor`
 - Handoff humano em casos definidos (desconto, FGTS, confusão repetida, etc.)
-- Modelo recomendado: `gpt-4o-mini` (custo) ou `gpt-4o` (qualidade)
+- Provider efetivo: Google Gemini `models/gemini-2.5-flash` (o cabeçalho do prompt menciona gpt-4o; ignorar — decisão de provider está em [[project-dorinda-llm]])
 - Temperature: 0.3
 - Variável `{{ $now }}` é resolvida pelo n8n (Luxon)
 
-### 5 perguntas bloqueantes antes de iniciar 4.x
+### Decisões já tomadas (fechamento das antigas perguntas bloqueantes)
 
-Felipe precisa responder antes de qualquer código:
+1. **n8n:** mesma instância do FVC, prefixo `[LEANDRO]`, credentials separadas.
+2. **Asaas + Chatwoot:** fora de escopo **permanentemente** (todas as fases).
+3. **WhatsApp Cloud API:** fora de escopo **na Fase A**. Canal único é o widget do site.
+4. **LLM:** Google Gemini com key provisória do Felipe — trocar pela do Leandro antes do deploy.
+5. **Prompt da Mariana / workflows do FVC:** **não são reaproveitados** neste projeto. O `[LEANDRO] Chat_Widget_AI_v1` foi duplicado do template Mariana só como esqueleto, e teve LLM, prompt e nomes substituídos.
 
-1. **n8n hospedado onde?** Leandro e FVC compartilham instância? URL/host?
-2. **Asaas + Chatwoot:** Leandro tem contas? Cortamos do MVP e focamos só em
-   WhatsApp + OpenAI + Supabase?
-3. **WhatsApp Cloud API:** Leandro tem Phone Number ID + token Meta próprios?
-   Ou usamos o do FVC temporariamente?
-4. **OpenAI API key:** mesma do FVC ou separada? (custo + isolamento de contexto)
-5. **Prompt da Mariana:** texto/print do AI Agent dos workflows 1 e 3 — sem
-   isso a comparação fica incompleta.
+### Bug n8n descoberto em 2026-05-22 (sub-bloco 4.5)
+
+Ao criar `@n8n/n8n-nodes-langchain.toolHttpRequest` v1.1 via MCP com `sendHeaders: true` + `headerParameters.parameters: [...]`, o n8n autopreenche `parametersHeaders.values: [{}]` (objeto vazio). Esse `{}` vira `properties[""]` (key vazia) no schema JSON enviado ao Google Gemini, que rejeita com:
+
+```
+GenerateContentRequest.tools[0].function_declarations[0].parameters.properties[]: key cannot be empty
+```
+
+**Fix:** ao criar a tool via MCP, incluir `parameters.parametersHeaders: { values: [] }` na config inicial. Setar via `updateNode` depois também resolve o erro do Gemini, mas pode trigger auto-sanitization que remove `headerParameters` (perdendo o header `apikey`) — recriação do zero é mais seguro.
+
+**Mesma precaução** provavelmente vale pra `parametersQuery.values` e `parametersBody.values` se forem autocriados vazios.
+
+### Decisões de produto consolidadas — RPCs da Dorinda (sub-bloco 4.4)
+
+Contrato em `docs/04-DORINDA-TOOLS-CONTRACT.md` v0.2. 6 decisões registradas:
+
+1. Auth: anon key + `SECURITY DEFINER` (não service_role)
+2. Notificações: reusar enums existentes (`ai_handoff`, `new_lead`, `event_reminder`, `ai_insight`) com `metadata.source = 'dorinda'` — sem criar `dorinda_alert`
+3. `reminder_minutes_before` padrão de visita: 90 min
+4. Janela máxima de agendamento: 90 dias
+5. Dedup de lead por telefone: merge não-destrutivo, normalização `regexp_replace(phone, '[^0-9]', '', 'g')` em ambos os lados
+6. Conflito de horário: janela de exclusão de 60 min antes/depois, mesmo `user_id`, `type='visita'`, `status NOT IN ('cancelado','nao_compareceu')`
 
 ---
 
@@ -458,17 +522,19 @@ Ver seção 7 deste documento.
 
 ## 12. Como retomar tecnicamente
 
+### Frontend
+
 ```bash
 cd C:\Users\User\Documents\08_Leandro_CRM
 git status
-git log --oneline -5     # último commit funcional: 256cbab
+git log --oneline -5     # último commit funcional: 270cfd1
 npm install              # se nunca rodou nesta máquina
 npm run dev              # http://localhost:3000
 ```
 
 Login com o usuário de teste de sempre.
 
-Smoke test rápido (1 minuto) — confirmar que tudo continua de pé:
+Smoke test do frontend (1 minuto):
 
 1. Login carrega
 2. Dashboard mostra KPIs reais (não 0/0/0 estáticos)
@@ -477,7 +543,37 @@ Smoke test rápido (1 minuto) — confirmar que tudo continua de pé:
 4. Excluir esse evento (do tipo visita, com lead vinculado) → status do lead
    no funil volta automaticamente
 
-Se passar nos 4 itens, o estado pós-`256cbab` está íntegro.
+### Backend Dorinda (n8n)
+
+Smoke test do workflow `[LEANDRO] Chat_Widget_AI_v1` (~30 segundos):
+
+1. Abrir o workflow no n8n (`https://n8n.hubautomacao.pro`)
+2. Clicar no nó **Webhook — Nova Msg Widget** → **Listen for test event**
+3. Criar uma conversa de teste no Supabase:
+   ```sql
+   INSERT INTO chat_conversations (workspace_id, visitor_id, visitor_name, source, status)
+   VALUES ((SELECT id FROM workspaces LIMIT 1), 'visitor-smoke', 'Smoke Test', 'chat_widget', 'ai_mode')
+   RETURNING id;
+   ```
+4. Disparar pelo PowerShell:
+   ```powershell
+   $url = "https://webhook.hubautomacao.pro/webhook-test/c8590ef1-14e1-4d99-87ab-91521e7b63c2"
+   $payload = @{
+     record = @{
+       conversation_id = "<UUID_DO_PASSO_3>"
+       content = "Oi, tudo bem?"
+       sender_type = "visitor"
+       sender_name = "Smoke Test"
+     }
+   } | ConvertTo-Json -Depth 5
+   Invoke-RestMethod -Uri $url -Method Post -Body $payload -ContentType "application/json"
+   ```
+5. Esperar ~15s, conferir no Supabase:
+   ```sql
+   SELECT sender_type, sender_name, LEFT(content, 200) FROM chat_messages
+   WHERE conversation_id = '<UUID>' ORDER BY created_at DESC LIMIT 5;
+   ```
+   Deve aparecer uma linha `ai / Dorinda / <resposta>`.
 
 ### Comandos úteis
 
@@ -497,8 +593,7 @@ npx supabase --version   # CLI
 - `KNOWN-ISSUES.md` — tracker de bugs/dívidas
 - `PROMPT-DORINDA.md` — system prompt pronto para n8n
 - `01-DESIGN-SYSTEM.md` … `10-GUIA-ANTIGRAVITY.md` — specs visuais do redesign
-- `Chat_Widget_AI_v1.json`, `Mariana_FollowUp_Curto_v2.json`,
-  `Mariana_WhatsApp_v2.json` — workflows n8n base para Etapa 4
+- Workflows do CRM_FVC (`Chat_Widget_AI_v1`, `Mariana_FollowUp_Curto_v2`, `Mariana_WhatsApp_v2`) — **não são reaproveitados** no projeto Leandro. Mencionados apenas como referência histórica do template duplicado.
 
 ### Documentos arquivados em `_archive/`
 Substituídos por este consolidado:
@@ -522,9 +617,6 @@ Substituídos por este consolidado:
 
 ## Resumo em uma frase
 
-Fase A do CRM Leandro está com **frontend completo e estável**
-(Etapa 3 + 3.6 + 3.7 fechadas); o próximo passo é a **Etapa 4 — backend
-da Dorinda no n8n**, destravada por 5 perguntas listadas na seção 9.
+Fase A do CRM Leandro está com **frontend completo e estável** (Etapa 3 + 3.6 + 3.7 fechadas) e **backend da Dorinda em funcionamento ponta a ponta** (sub-blocos 4.1 + 4.2 + 4.3 fechados em 2026-05-13 — webhook → Postgres → Gemini 2.5 Flash → resposta gravada). Próximo passo: **sub-bloco 4.4 — tools do AI Agent** (consultar_imoveis, criar_lead, agendar_visita, notificar_corretor).
 
-**Próxima atualização:** ao final do sub-bloco 4.1 (migration
-`n8n_chat_histories`) ou após resposta das 5 perguntas bloqueantes.
+**Próxima atualização:** ao final do sub-bloco 4.4 (tools configuradas no AI Agent) ou após a validação manual do prompt (4.5).
