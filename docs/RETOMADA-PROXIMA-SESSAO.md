@@ -14,14 +14,17 @@ Meta: projeto viável pro **teste real do Leandro com cliente em 2026-05-26 (ter
 - **Etapa 5 — Chat widget MVP construído** no site (`07_Leando_Alonso_Site`, repo separado, JSX/Vite/GSAP). Arquivos: `src/components/ChatWidget.jsx`, `src/lib/supabase.js`, montado no `App.jsx`; `@supabase/supabase-js` instalado; `.env.local` com URL/anon/workspace. **Build passa, testado no browser**: bolha abre, cria conversa + insere msg via anon (RLS OK), polling pela resposta. Commit local `9f67d79` no repo Leandro-Alonso (**NÃO deployado** — decisão do usuário: só commitar).
 - **Verificação crítica:** o **Supabase DB Webhook NÃO existe** (todas as execuções webhook do n8n foram disparos manuais `{record}` cru; nenhuma com envelope Supabase). Ver `project_supabase_db_webhook_missing.md`.
 
-### 🔜 Amanhã (2026-05-26 cedo) — ordem sugerida
-1. **Trocar a Gemini key** do Felipe pela do Leandro (com billing) no `.env.local` do CRM → `node scripts/dorinda-brain/build-n8n-code.cjs` → `node scripts/dorinda-brain/inject-to-n8n.cjs --apply`.
-2. **Rodar os 3 cenários pendentes do 4.6** (cota fresca): `node scripts/dorinda-brain/scenario-runner.cjs desconto,fgts,humano 8000` — conferir SEM `FALLBACK: gemini_indisponivel`. Se limpo → **13/13, fecha 4.6**.
-3. **Criar o Supabase DB Webhook** (Dashboard → Database → Webhooks): tabela `public.chat_messages`, evento INSERT, POST → `https://webhook.hubautomacao.pro/webhook/c8590ef1-14e1-4d99-87ab-91521e7b63c2`, `Content-Type: application/json`.
-4. **Ativar o workflow** `Db1qI76NKGnJB3x6` (hoje `active:false`).
-5. **Deploy do site na Vercel** + setar as 3 `VITE_` vars no Vercel (URL, ANON, `VITE_DORINDA_WORKSPACE_ID=7b64709e-ce9c-42ff-873b-79e204c2fa7e`).
-6. **e2e real:** abrir o site, mandar msg no widget, ver a Dorinda responder.
-7. **Cleanup** (ainda pendente, inclui dados de hoje `widget-test-*` + convs do widget): `node scripts/dorinda-brain/cleanup-test-data.cjs --apply`.
+### ✅ Wiring de produção FECHADO no fim do dia 2026-05-25
+- **Vercel:** 3 `VITE_` vars setadas + redeploy (feito manual pelo usuário).
+- **Supabase DB Webhook criado E VERIFICADO:** insert em `chat_messages` dispara o n8n — execução `34962` (modo webhook, success, envelope `{type:INSERT, table:chat_messages, record,...}`).
+- **Workflow `Db1qI76NKGnJB3x6` ATIVADO** (`active:true`).
+- **e2e REAL funcionou hoje:** widget → Supabase → DB Webhook → n8n → Dorinda Brain → **resposta real do Gemini** persistida em `chat_messages` (a cota tinha recuperado). Conversa de teste `69f8ad26`.
+
+### 🔜 Amanhã (2026-05-26 cedo) — antes do teste com cliente
+1. **Trocar a Gemini key** do Felipe pela do Leandro (billing) no `.env.local` do CRM → `node scripts/dorinda-brain/build-n8n-code.cjs` → `node scripts/dorinda-brain/inject-to-n8n.cjs --apply`. ⚠️ O `inject --apply` **desativa o workflow** no fim — **reativar** depois (via API `POST /workflows/Db1qI76NKGnJB3x6/activate` ou na UI). Sem a key do Leandro, free-tier do Felipe pode dar 429 sob uso real.
+2. **Rodar os 3 cenários pendentes do 4.6** (cota fresca): `node scripts/dorinda-brain/scenario-runner.cjs desconto,fgts,humano 8000` — SEM `FALLBACK: gemini_indisponivel`. Se limpo → **13/13, fecha 4.6**.
+3. **Smoke no site live:** abrir a URL da Vercel, mandar msg no widget, ver a Dorinda responder de verdade.
+4. **Cleanup** (pendente, inclui dados de hoje: `widget-test-*`, `pipe-test-*`, conv `8499b31e` do teste de browser, `69f8ad26`): `node scripts/dorinda-brain/cleanup-test-data.cjs --apply` (conferir se o filtro cobre esses prefixos).
 
 ---
 
