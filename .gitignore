@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# JSONs de referência local em docs/ (workflows n8n com credenciais embutidas)
+# Não devem ser commitados — são só contexto pra agentes de IA lerem localmente
+docs/*.json
+
+# artefato gerado com secrets inline (Dorinda Code Node)
+scripts/dorinda-brain/dorinda-brain.n8n.js

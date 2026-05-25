@@ -7,7 +7,26 @@
       "Bash(grep -viE 'node_modules|\\\\.ts$|\\\\.json$')",
       "Bash(npx tsc:*)",
       "Bash(git stash:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_search",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+      "mcp__plugin_context-mode_context-mode__ctx_stats",
+      "Bash(git commit:*)",
+      "Bash(npm run:*)",
+      "Bash(git restore:*)",
+      "Bash(mkdir -p \"C:/Users/User/Documents/08_Leandro_CRM/_archive\")",
+      "Bash(git mv *)",
+      "Bash(mv \"WEBAPP AUDITOR + CONTINUIDADE \\(VITE + TANSTACK ROUTER\\).md\" \"_archive/WEBAPP-AUDITOR-CONTINUIDADE.md\")",
+      "Skill(commit-commands:commit)",
+      "Bash(git push *)",
+      "Bash(git check-ignore *)",
+      "mcp__n8n__n8n_health_check",
+      "mcp__n8n__n8n_list_workflows",
+      "mcp__n8n__n8n_get_workflow",
+      "mcp__n8n__tools_documentation",
+      "mcp__n8n__n8n_update_partial_workflow"
     ]
   }
 }

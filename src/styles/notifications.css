@@ -1,0 +1,271 @@
+/* ============================================================================
+   notifications.css — Sino + dropdown de notificações persistentes (3.6.6)
+   ============================================================================ */
+
+.notifications-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.notifications-bell {
+  position: relative;
+}
+
+.notifications-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+.notifications-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: transparent;
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 151;
+  width: 360px;
+  max-width: calc(100vw - 2rem);
+  max-height: 420px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: var(--popover, #ffffff);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+[data-theme='dark'] .notifications-dropdown,
+.dark .notifications-dropdown {
+  background: rgba(45, 45, 45, 0.95);
+}
+
+.notifications-dropdown__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.notifications-dropdown__title {
+  font-family: var(--font-display, 'Geist Variable', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.notifications-dropdown__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notifications-dropdown__action:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--foreground);
+}
+
+[data-theme='dark'] .notifications-dropdown__action:hover:not(:disabled),
+.dark .notifications-dropdown__action:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.notifications-dropdown__empty {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+}
+
+.notifications-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.notifications-item {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notifications-item:hover {
+  background: rgba(212, 160, 23, 0.05);
+}
+
+.notifications-item--unread {
+  background: rgba(212, 160, 23, 0.08);
+  border-left: 3px solid #D4A017;
+}
+
+.notifications-item__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.15rem;
+}
+
+.notifications-item__body {
+  font-size: 0.78rem;
+  color: var(--muted-foreground);
+  margin: 0 0 0.3rem;
+}
+
+.notifications-item__date {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+}
+
+/* ============================================================================
+   Popup flutuante (dispara no createNotification). Substitui o toast.info
+   do sonner, inspirado no card do CRM_FVC.
+   ============================================================================ */
+
+.notification-popup-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+@keyframes notification-popup-slide-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-popup {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 360px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--popover, #ffffff);
+  color: var(--foreground);
+  border: 1px solid #3b82f6;
+  border-left: 4px solid #3b82f6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: notification-popup-slide-in 0.3s ease;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+[data-theme='dark'] .notification-popup,
+.dark .notification-popup {
+  background: rgba(30, 41, 59, 0.96);
+}
+
+.notification-popup__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.notification-popup__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #3b82f6;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+}
+
+.notification-popup__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.notification-popup__close:hover {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--foreground);
+}
+
+.notification-popup__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notification-popup__main-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.notification-popup__badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.notification-popup__body {
+  font-size: 0.82rem;
+  color: var(--muted-foreground);
+  line-height: 1.4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.08);
+}

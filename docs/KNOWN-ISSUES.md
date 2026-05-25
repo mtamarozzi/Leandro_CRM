@@ -1,0 +1,208 @@
+# 🐞 Known Issues — CRM Leandro
+
+Arquivo de registro de problemas conhecidos que **não quebram a aplicação** mas precisam ser resolvidos em etapas futuras. Ordenado por prioridade.
+
+---
+
+## ✅ KI-001 — Recharts warning ao desmontar gráficos — RESOLVIDO em 2026-04-14 (`6e0ea42`)
+
+**Descoberto em:** Etapa 2 (Fase A, backend)
+**Componentes afetados:** `<DashboardView>` em `src/App.tsx`
+**Severidade:** cosmética
+**Resolvido em:** Sub-bloco 3.5.2 — guardas de `data.length > 0` antes de montar `<ResponsiveContainer>` e `key` único por chart pra forçar unmount limpo.
+
+### Sintoma
+Ao navegar para fora do Dashboard (ex: clicar em Sair, trocar de aba), o console do Vite mostra:
+
+```
+The width(-1) and height(-1) of chart should be greater than 0,
+please check the style of container, or the props width(100%) and height(100%),
+or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+height and width.
+```
+
+### Causa raiz
+Durante a desmontagem do componente, o `<ResponsiveContainer>` do Recharts tenta recalcular suas dimensões enquanto o container pai está em estado transitório (width/height = 0). Isso é comum em aplicações que usam `motion` + Recharts + React Router.
+
+### Por que é aceitável agora
+- Não quebra funcionalidade
+- Não aparece pro usuário final
+- Só aparece no terminal do Vite em dev
+- Navegação funciona normalmente
+
+### Como resolver (Etapa 3)
+Durante a troca de mockData por queries reais do Supabase:
+
+1. Envolver cada gráfico em condicionais explícitas:
+   ```tsx
+   {data && data.length > 0 ? (
+     <ResponsiveContainer width="100%" height={300}>
+       ...
+     </ResponsiveContainer>
+   ) : (
+     <EmptyChart />
+   )}
+   ```
+
+2. Adicionar `key` único por gráfico baseado em `activeTab` pra forçar unmount/remount limpo:
+   ```tsx
+   <ResponsiveContainer key={`chart-${activeTab}`} ...>
+   ```
+
+3. Garantir que o container CSS tem `min-width: 0` e `min-height` explícitos em todas as cascatas.
+
+### Referências
+- https://github.com/recharts/recharts/issues/172
+- https://stackoverflow.com/questions/70104738/
+
+---
+
+## 🟡 KI-002 — `npm run lint` (tsc --noEmit) com 5 erros pré-existentes
+
+**Descoberto em:** Sub-bloco 3.2.2 (Etapa 3, Fase A, backend)
+**Componentes afetados:**
+- `src/lib/supabase.ts` (linhas 15, 16) — `import.meta.env`
+- `src/main.tsx` (linha 17) — TanStack Router exige `strictNullChecks`
+- `src/routes/__root.tsx` (linha 32) — `import.meta.env`
+- `src/routes/_authenticated.tsx` (linha 25) — API `redirect` mudou no TanStack Router
+
+**Severidade:** leve (não quebra dev/build, só o type-check manual)
+
+### Sintoma
+Rodar `npm run lint` retorna exit 1 com 5 erros TypeScript:
+
+```
+src/lib/supabase.ts(15,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/supabase.ts(16,37): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/main.tsx(17,29): error TS2345: ... "strictNullChecks must be enabled in tsconfig.json"
+src/routes/__root.tsx(32,22): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/routes/_authenticated.tsx(25,11): error TS2353: 'redirect' does not exist in type 'ParamsReducerFn<...>'
+```
+
+### Causa raiz
+1. **`vite/client` types não importados** — falta `/// <reference types="vite/client" />` ou `"types": ["vite/client"]` no `tsconfig.json` → `import.meta.env` não tem tipagem
+2. **`strictNullChecks: false` no tsconfig** — TanStack Router 1.166+ exige strict null checks pra inferir tipos do `createRouter`
+3. **Breaking change no TanStack Router** — em algum bump entre 1.166 e 1.168, a API de `beforeLoad` deixou de aceitar `redirect` como objeto plano (agora é função `throw redirect()`)
+
+### Por que é aceitável agora
+- Vite roda normalmente em dev (`npm run dev` funciona) — Vite não usa `tsc`
+- Build (`vite build`) também passa, pois Vite usa esbuild que ignora esses erros
+- A aplicação funciona end-to-end (login OK, navegação OK)
+- Sub-blocos posteriores conseguem trabalhar com `tsc` cirúrgico via `grep` por arquivo
+
+### Como resolver (sub-bloco de cleanup futuro, sugestão: 3.6)
+1. Em `tsconfig.json`, adicionar `"types": ["vite/client", "node"]` em `compilerOptions`
+2. Habilitar `"strictNullChecks": true` (ou `"strict": true` se ainda não estiver)
+3. Refatorar `_authenticated.tsx` pra usar `throw redirect({ to: '/login' })` dentro de `beforeLoad`
+4. Rodar `npm run lint` e confirmar 0 erros
+
+### Referências
+- https://vitejs.dev/guide/features.html#client-types
+- https://tanstack.com/router/latest/docs/framework/react/guide/authenticated-routes
+
+---
+
+## 🟡 KI-003 — Bugs de UX do wizard de imóveis (5 itens)
+
+**Descoberto em:** Sub-bloco 3.3 — teste manual do wizard em 2026-04-14
+**Componentes afetados:**
+- `components/property-wizard/PropertyWizardModal.tsx`
+- `components/property-wizard/Step1Identification.tsx`
+- `components/property-wizard/Step4ValuesPhotos.tsx`
+- `src/styles/property-wizard.css`
+- `src/App.tsx` (cards de imóveis)
+
+**Severidade:** cosmética + funcional (upload de fotos sem acesso claro)
+
+### Sintomas
+
+1. ~~**Upload de fotos invisível após criar**~~ — ✅ **resolvido em 2026-04-14 (`11a1fd8`)**. Quando `createdId` é setado, o conteúdo do step 4 é substituído por um header "Fotos do imóvel" com o PhotoUploader em destaque.
+2. ~~**Título "Novo imóvel" não aparece**~~ — ✅ **resolvido em 2026-04-14 no commit `c487cdc`**. Causa real: `.topbar` com `z-index: 100` cobria o modal que estava em `z-50`. Fix: dialog overlay → `z-[200]`, content → `z-[201]`.
+3. ~~**Selects nativos ilegíveis no dark mode**~~ — ✅ **resolvido em 2026-04-14 (`40b705f`)**. CSS com background/color hex explícito nas options dos 3 selects do wizard e modais de lead/evento.
+4. ~~**Botão "Ver detalhes" nos cards não faz nada**~~ — ✅ **resolvido em 2026-04-14 (`40b705f`)**. Botão removido do card de `PropertiesView` — detalhe será um sub-bloco próprio no futuro.
+5. ~~**Setas estranhas no step bar**~~ — ✅ **resolvido em 2026-04-14 (`40b705f`)**. `overflow-x: auto` trocado por `flex-wrap: wrap`.
+
+### Causa raiz
+
+1. PhotoUploader concatenado ao form; deveria **substituir** o conteúdo do step 4 quando `createdId` existe.
+2. ~~Possível ausência da variável CSS `--text-primary`~~ — diagnóstico estava errado. Causa real era z-index (ver item 2 acima, resolvido).
+3. Native `<select><option>` não herda `color`/`background` das CSS vars do dark theme no Chrome/Edge/Firefox. Solução: substituir pelo componente shadcn `Select` (já disponível em `components/ui/select.tsx`).
+4. Botão `btn-material` permaneceu do mockup original quando a `PropertiesView` foi refatorada.
+5. `overflow-x: auto` em container sem overflow real ativa scroll indicators nativos em alguns browsers.
+
+### Por que é aceitável agora
+
+- Criação de imóveis funciona (confirmado com `LDR-2026-0001` criado com sucesso)
+- Lista renderiza, filtros funcionam, busca funciona
+- Fotos **podem** ser adicionadas (basta scrollar), só não tem affordance clara
+- Nenhum desses bugs bloqueia o sub-bloco 3.4 (Leads + Funil)
+
+### Como resolver (sub-bloco de polish futuro)
+
+Sugestão: virar **sub-bloco 3.3.8** ou agrupar com o cleanup do 3.5. 5 fixes isolados:
+
+1. **Fotos em destaque após criar:** no `PropertyWizardModal`, quando `createdId !== null`, renderizar apenas o `PhotoUploader` dentro de step 4 (wrappear em novo componente `Step4PostCreate`).
+2. ~~Título~~ — já resolvido (ver item 2 dos sintomas).
+3. **Selects:** substituir os 3 `<select>` nativos no `Step1Identification` pelo `Select` do shadcn; se o 3.4 introduzir novos selects (lead.status, origin), fazer na mesma passada. Evitar native `<select>` daqui pra frente.
+4. **"Ver detalhes":** remover o botão do card em `PropertiesView` OU transformar em "Editar" quando houver fluxo de edição (sub-bloco próprio).
+5. **Step bar:** trocar `overflow-x: auto` por `flex-wrap: wrap` em `.property-wizard__steps`, ou usar `overflow-x: visible` + `scrollbar-width: none`.
+
+### Referências
+- Evidências visuais: pasta `Imagens/` (screenshots do teste de 2026-04-14)
+
+---
+
+## ✅ KI-004 — Scheduler de lembretes não respeita `reminder_minutes_before` — RESOLVIDO em 2026-04-15 (sub-bloco 3.7)
+
+**Descoberto em:** Sub-bloco 3.6 (teste manual em 2026-04-15)
+**Componentes afetados:** `src/hooks/useEvents.ts`, `src/hooks/useNotifications.ts`, novo `src/hooks/useReminderScheduler.ts`
+**Severidade:** funcional (feature parcialmente implementada)
+
+### Sintoma
+Ao criar um evento com `reminder_minutes_before` definido (ex.: lembrar 5 min antes), o popup + beep disparavam **imediatamente após salvar**, não no horário do lembrete.
+
+### Causa raiz
+`useCreateEvent` chamava `createNotification` logo após o INSERT do evento. Não havia scheduler que polasse o DB pra saber quando disparar o lembrete no momento certo. O campo `reminder_minutes_before` existia no schema mas nunca era consumido.
+
+### Fix (sub-bloco 3.7)
+1. **`useNotifications.ts`** — `createNotification` agora aceita `silent?: boolean`. Quando `silent=true`, só persiste a row da notificação no banco (pra aparecer no sino), mas pula popup + beep.
+2. **`useEvents.ts`** — `useCreateEvent` passa `silent: true` quando o evento tem `reminder_minutes_before > 0`. Sem lembrete, dispara na hora como antes.
+3. **Novo `useReminderScheduler.ts`** — hook com polling a cada 30s que:
+   - Lista eventos nas próximas 24h com `reminder_minutes_before` definido
+   - Filtra por status != `cancelado` e `realizado`
+   - Para cada evento na janela `[starts_at - reminder_minutes_before, starts_at)`, dispara `showNotificationPopup` + `playNotificationBeep`
+   - Dedup via `localStorage['crm:fired-event-reminders']` (TTL 7 dias)
+   - Re-checa no `visibilitychange` quando a aba volta a ficar visível
+4. **`_authenticated.tsx`** — monta `useReminderScheduler()` no layout autenticado.
+
+### Limitações conhecidas
+- Só funciona com aba aberta e usuário logado (não é push notification)
+- Precisão ±30s (intervalo do poll)
+- Não atravessa abas diferentes (cada aba fira seu próprio popup e grava seu próprio localStorage)
+
+### Próximo passo possível (escopo futuro)
+Scheduler backend via Supabase Edge Function + cron pra disparar notificações mesmo com o usuário offline.
+
+---
+
+## Template para novos issues
+
+```
+## 🟡 KI-NNN — Título curto
+
+**Descoberto em:** Etapa N
+**Componentes afetados:** arquivo(s)
+**Severidade:** cosmética | leve | média | crítica
+
+### Sintoma
+(o que o usuário/dev vê)
+
+### Causa raiz
+(entendimento técnico)
+
+### Por que é aceitável agora
+(justificativa pra adiar)
+
+### Como resolver
+(plano concreto)
+```
