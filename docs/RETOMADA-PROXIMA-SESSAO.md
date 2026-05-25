@@ -1,7 +1,27 @@
-# Retomada — próxima sessão (a partir de 2026-05-23 tarde)
+# Retomada — próxima sessão (a partir de 2026-05-25 tarde)
 
 > Cole esse arquivo (ou referencie) na primeira mensagem da próxima conversa.
 > Substitui a versão antiga (em `_archive/RETOMADA-PROXIMA-SESSAO.md`, de abril).
+
+---
+
+## 🚩 SESSÃO 2026-05-25 — 4.7 fechado + widget MVP feito. Foco amanhã: e2e real
+
+Meta: projeto viável pro **teste real do Leandro com cliente em 2026-05-26 (terça)**.
+
+### ✅ Feito hoje (2026-05-25)
+- **Sub-bloco 4.7 FECHADO:** `{{ $now }}` não é mais congelado em build-time. O Code Node agora resolve a data em **runtime** (`Intl.DateTimeFormat` pt-BR / America/Sao_Paulo) via sentinel `__DORINDA_NOW__` + `__nowPtBr()`. Editado `scripts/dorinda-brain/build-n8n-code.cjs`, rebuildado, **reinjetado no n8n e verificado no servidor** (jsCode 31848 chars, sem data congelada). 22/22 testes unitários. **Key do Gemini NÃO trocada** (de propósito — amanhã).
+- **Etapa 5 — Chat widget MVP construído** no site (`07_Leando_Alonso_Site`, repo separado, JSX/Vite/GSAP). Arquivos: `src/components/ChatWidget.jsx`, `src/lib/supabase.js`, montado no `App.jsx`; `@supabase/supabase-js` instalado; `.env.local` com URL/anon/workspace. **Build passa, testado no browser**: bolha abre, cria conversa + insere msg via anon (RLS OK), polling pela resposta. Commit local `9f67d79` no repo Leandro-Alonso (**NÃO deployado** — decisão do usuário: só commitar).
+- **Verificação crítica:** o **Supabase DB Webhook NÃO existe** (todas as execuções webhook do n8n foram disparos manuais `{record}` cru; nenhuma com envelope Supabase). Ver `project_supabase_db_webhook_missing.md`.
+
+### 🔜 Amanhã (2026-05-26 cedo) — ordem sugerida
+1. **Trocar a Gemini key** do Felipe pela do Leandro (com billing) no `.env.local` do CRM → `node scripts/dorinda-brain/build-n8n-code.cjs` → `node scripts/dorinda-brain/inject-to-n8n.cjs --apply`.
+2. **Rodar os 3 cenários pendentes do 4.6** (cota fresca): `node scripts/dorinda-brain/scenario-runner.cjs desconto,fgts,humano 8000` — conferir SEM `FALLBACK: gemini_indisponivel`. Se limpo → **13/13, fecha 4.6**.
+3. **Criar o Supabase DB Webhook** (Dashboard → Database → Webhooks): tabela `public.chat_messages`, evento INSERT, POST → `https://webhook.hubautomacao.pro/webhook/c8590ef1-14e1-4d99-87ab-91521e7b63c2`, `Content-Type: application/json`.
+4. **Ativar o workflow** `Db1qI76NKGnJB3x6` (hoje `active:false`).
+5. **Deploy do site na Vercel** + setar as 3 `VITE_` vars no Vercel (URL, ANON, `VITE_DORINDA_WORKSPACE_ID=7b64709e-ce9c-42ff-873b-79e204c2fa7e`).
+6. **e2e real:** abrir o site, mandar msg no widget, ver a Dorinda responder.
+7. **Cleanup** (ainda pendente, inclui dados de hoje `widget-test-*` + convs do widget): `node scripts/dorinda-brain/cleanup-test-data.cjs --apply`.
 
 ---
 
@@ -22,22 +42,31 @@ O `toolHttpRequest` foi **abandonado** (3 bugs distintos do runtime do n8n). A D
 
 ---
 
-## 🎯 Próximo passo: sub-bloco 4.6 — 3/13 validados, 10 PENDENTES por cota
+## 🎯 Próximo passo: sub-bloco 4.6 — 9/13 validados limpos + 1 parcial, 3 PENDENTES por cota
 
 Os 13 cenários do `PROMPT-DORINDA.md` agora são rodados de forma **automatizada** pelo `scripts/dorinda-brain/scenario-runner.cjs` (cria conversa via service-role, roda o cérebro com anon igual produção, loga as RPCs + respostas; multi-turno persiste a resposta entre turnos). Não precisa de n8n/Execute workflow.
 
-**Validados em 2026-05-23 no modelo de produção (`gemini-2.5-flash`):**
-- ✅ `saudacao` — responde sem pedir nome
-- ✅ `preco` — pacote completo (preço + condomínio + IPTU, somou os mensais)
-- 👁 `pergunta_direta` — acolheu e qualificou (comprar/alugar, dorms) mas **não** chamou `consultar_imoveis` no 1º turno; defensável pelo princípio "converse, não interrogue", mas a expectativa era apresentar — **reavaliar tom com o Leandro**
+**Validados (`gemini-2.5-flash`, produção):**
+- ✅ `saudacao` (2026-05-23) — responde sem pedir nome
+- ✅ `preco` (2026-05-23) — pacote completo (preço + condomínio + IPTU, somou os mensais)
+- 👁 `pergunta_direta` (2026-05-23) — acolheu e qualificou (comprar/alugar, dorms) mas **não** chamou `consultar_imoveis` no 1º turno; defensável pelo princípio "converse, não interrogue", mas a expectativa era apresentar — **reavaliar tom com o Leandro**
+- ✅ `visita` (2026-05-25) — multi-turno, `consultar_imovel_por_id` 2x, **`agendar_visita` retornou `protocol_code=VIS-2026-0002`** + lead criado
+- ✅ `locacao` (2026-05-25) — falou caução/fiador/seguro-fiança (não entrada)
+- ✅ `reservado` (2026-05-25) — status "reservado" real do LDR-2026-0001 + ofereceu alternativa
+- ✅ `confusa` (2026-05-25) — handoff caloroso após 3x; `notificar_corretor(human_mode=true)` (handoff **limpo**, decisão do LLM)
+- ✅ `robo` (2026-05-25) — não confirmou nem negou, manteve o tom
+- ✅ `audio` (2026-05-25) — tratou transcrição como texto
+- ✅ `encerra` (2026-05-25) — encerrou com calor sem forçar
 
-**10 pendentes** (`visita, desconto, fgts, humano, locacao, reservado, confusa, robo, audio, encerra`): bloqueados **só pela cota free-tier do Gemini** — `gemini-2.5-flash` tem **20 requisições/dia** na free-tier (key do Felipe), esgotada hoje. `2.0-flash` também 429; modelos lite/3.x dão 404 nessa tier. Ver `feedback_gemini_free_tier_daily_quota.md`.
+**3 PENDENTES de re-run** (`desconto, fgts, humano`): rodaram em 2026-05-25 mas **bateram 429 no meio do run** — a cota free-tier de 20/dia do Felipe esgotou. Os 3 criaram `notificar_corretor(human_mode=true)` **mecanicamente pelo fallback de erro** (`FALLBACK: gemini_indisponivel:429`), NÃO pela decisão de handoff do LLM. **Não contam como validados** — precisam de re-run com Gemini disponível. Ver `feedback_gemini_free_tier_daily_quota.md`.
 
-**Como retomar (amanhã, após reset diário ~4h BRT):**
+**Decisão (2026-05-25):** esperar o reset diário (~4h BRT) e re-rodar só os 3. (Alternativa que também adianta a 4.7: trocar a key do Felipe pela do Leandro com billing.)
+
+**Como retomar (amanhã, após reset ~4h BRT) — só os 3 pendentes:**
 ```
-node scripts/dorinda-brain/scenario-runner.cjs visita,desconto,fgts,humano,locacao,reservado,confusa,robo,audio,encerra 8000
+node scripts/dorinda-brain/scenario-runner.cjs desconto,fgts,humano 8000
 ```
-(8s de espaçamento respeita o RPM; o modelo default já é `2.5-flash`.) Conferir nos logs: `agendar_visita` retorna `protocol_code=VIS-2026-NNNN`; handoffs criam `notificar_corretor` com `human_mode=true`. Limpar depois com `node scripts/dorinda-brain/cleanup-test-data.cjs --apply`.
+Conferir nos logs: **sem** linha `FALLBACK: gemini_indisponivel`; `desconto`/`fgts` devem dar handoff pela lógica do LLM (não por erro); `humano` deve gerar handoff caloroso (não o texto técnico "probleminha pra puxar informação"). Se os 3 passarem limpos → **13/13, fecha 4.6**. Limpar TUDO depois com `node scripts/dorinda-brain/cleanup-test-data.cjs --apply` (cleanup ainda PENDENTE — dados deste run de 2026-05-25 preservados pra trilha).
 
 > Se quiser destravar HOJE: trocar a `GEMINI_API_KEY` por uma com billing (ou a do Leandro) no `.env.local`, rebuildar+reinjetar, e rodar o comando acima.
 

@@ -16,8 +16,11 @@ for (const line of fs.readFileSync(path.resolve(dir, '../../.env.local'), 'utf8'
   if (m) env[m[1]] = m[2].trim();
 }
 
-const { loadPrompt, nowPtBr } = require('./prompt.cjs');
-const prompt = loadPrompt(nowPtBr());
+// 4.7: a data NÃO é mais congelada em build-time. Gravamos um sentinel no prompt
+// que o Code Node substitui pela data real (America/Sao_Paulo) a cada execução.
+const { loadPrompt } = require('./prompt.cjs');
+const NOW_SENTINEL = '__DORINDA_NOW__';
+const prompt = loadPrompt(NOW_SENTINEL);
 
 const helpers = stripExports(read('helpers.cjs'));
 const tools = stripExports(read('tools.cjs'));
@@ -51,7 +54,10 @@ ${tools.trim()}
 
 ${orchestrate.trim()}
 ${HTTP_FN}
-const SYSTEM_PROMPT = ${JSON.stringify(prompt)};
+// 4.7: data resolvida em RUNTIME (America/Sao_Paulo) a cada execução do Code Node,
+// substituindo o sentinel __DORINDA_NOW__ baked no prompt em build-time.
+const __nowPtBr = () => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'full', timeStyle: 'short' }).format(new Date());
+const SYSTEM_PROMPT = ${JSON.stringify(prompt)}.replace(/__DORINDA_NOW__/g, () => __nowPtBr());
 // Secrets hardcoded a partir do .env.local em build-time. Este servidor n8n bloqueia o acesso
 // a variáveis de ambiente no Code Node (N8N_BLOCK_ENV_ACCESS_IN_NODE), e o acesso lança exceção
 // no proxy antes de qualquer try/catch — por isso aqui só usamos consts hardcoded. Pra trocar a
