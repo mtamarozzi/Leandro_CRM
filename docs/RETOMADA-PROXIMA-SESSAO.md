@@ -5,7 +5,7 @@
 
 ---
 
-## 🚩 SESSÃO 2026-05-25 — 4.7 fechado + widget MVP feito. Foco amanhã: e2e real
+## 🚩 SESSÃO 2026-05-25 — Fase A NO AR (Dorinda e2e + site catálogo/widget + CRM deployado). Amanhã: fechar 4.6 + teste real
 
 Meta: projeto viável pro **teste real do Leandro com cliente em 2026-05-26 (terça)**.
 
@@ -20,11 +20,17 @@ Meta: projeto viável pro **teste real do Leandro com cliente em 2026-05-26 (ter
 - **Workflow `Db1qI76NKGnJB3x6` ATIVADO** (`active:true`).
 - **e2e REAL funcionou hoje:** widget → Supabase → DB Webhook → n8n → Dorinda Brain → **resposta real do Gemini** persistida em `chat_messages` (a cota tinha recuperado). Conversa de teste `69f8ad26`.
 
+### ✅ Estado final do dia (tudo no ar)
+- **Site público (`07_Leando_Alonso_Site`, repo Leandro-Alonso, Vercel):** chat widget da Dorinda (global, abre vazio, anti-duplicata), **catálogo `/imoveis`** (cards com foto/preço/condo+IPTU), **detalhe `/imoveis/:id`** (galeria + dados completos + botão "Falar com a Dorinda" que abre o widget com contexto via evento `dorinda:open`), e **link "Imóveis" no navbar** (desktop + mobile). Tudo commitado e pushed (`main`), deploys disparados. Preços de teste corrigidos no banco (Macuco R$ 550.000 / Embaré R$ 750.000).
+- **CRM admin deployado na Vercel: `leandro-crm.vercel.app`** — **login funcionando** (usuário `leandro@leandro.com.br` no Supabase Auth, confirmado). Env na Vercel: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`.
+- **Merge `feat/backend-fase-a` → `main` (CRM) feito e pushed** (merge commit `8181997`, `--no-ff`). Build do CRM passa (`vite build`, 3203 módulos). Branch de trabalho local segue `feat/backend-fase-a`.
+- **Dorinda em produção:** workflow `Db1qI76NKGnJB3x6` ATIVO, DB Webhook do Supabase verificado, e2e real OK. 4.7 fechado (data em runtime). Regra anti-markdown no prompt.
+
 ### 🔜 Amanhã (2026-05-26 cedo) — antes do teste com cliente
-1. **Trocar a Gemini key** do Felipe pela do Leandro (billing) no `.env.local` do CRM → `node scripts/dorinda-brain/build-n8n-code.cjs` → `node scripts/dorinda-brain/inject-to-n8n.cjs --apply`. ⚠️ O `inject --apply` **desativa o workflow** no fim — **reativar** depois (via API `POST /workflows/Db1qI76NKGnJB3x6/activate` ou na UI). Sem a key do Leandro, free-tier do Felipe pode dar 429 sob uso real.
+1. **Trocar a Gemini key** do Felipe pela do Leandro (billing) no `.env.local` do CRM → `node scripts/dorinda-brain/build-n8n-code.cjs` → `node scripts/dorinda-brain/inject-to-n8n.cjs --apply`. ⚠️ O `inject --apply` **desativa o workflow** no fim — **reativar** depois (`POST /workflows/Db1qI76NKGnJB3x6/activate` ou na UI). Sem a key do Leandro, free-tier do Felipe dá 429 sob uso real.
 2. **Rodar os 3 cenários pendentes do 4.6** (cota fresca): `node scripts/dorinda-brain/scenario-runner.cjs desconto,fgts,humano 8000` — SEM `FALLBACK: gemini_indisponivel`. Se limpo → **13/13, fecha 4.6**.
-3. **Smoke no site live:** abrir a URL da Vercel, mandar msg no widget, ver a Dorinda responder de verdade.
-4. **Cleanup** (pendente, inclui dados de hoje: `widget-test-*`, `pipe-test-*`, conv `8499b31e` do teste de browser, `69f8ad26`): `node scripts/dorinda-brain/cleanup-test-data.cjs --apply` (conferir se o filtro cobre esses prefixos).
+3. **Teste real do Leandro com cliente:** abrir o site live, mandar msg no widget (e via botão do detalhe do imóvel), ver a Dorinda responder de verdade.
+4. **Cleanup** dos dados de teste (`widget-test-*`, `pipe-test-*`, conv `8499b31e` do browser, `69f8ad26`, `pipe-test`): `node scripts/dorinda-brain/cleanup-test-data.cjs --apply` (conferir se o filtro cobre esses prefixos).
 
 ---
 
