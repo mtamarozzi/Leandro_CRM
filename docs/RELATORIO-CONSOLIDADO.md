@@ -5,10 +5,10 @@
 > `CONTINUIDADE-PROJETO-LEANDRO.md`, `RETOMADA-PROXIMA-SESSAO.md`,
 > `HANDOFF.md`, `PLANO-CORRECOES-FINAIS.md`, `WEBAPP AUDITOR + CONTINUIDADE.md`.
 >
-> **Versão:** 1.3 — atualizado em 2026-05-22 (fim do dia — sub-bloco 4.4 fechado, 4.5 com tools configuradas, smoke e2e pendente)
+> **Versão:** 1.4 — atualizado em 2026-05-25 (pivô Code Node, 4.6 parcial, 4.7 fechado, widget Etapa 5 deployado, DB Webhook criado, e2e real OK, catálogo Etapa 6 MVP)
 > **Branch atual:** `feat/backend-fase-a`
-> **Último commit:** `270cfd1 docs: adiciona CLAUDE.md com regras context-mode e prompt glassmorphism` *(commit desta sessão pendente)*
-> **Status global:** Fase A funcionalmente completa no frontend. **Sub-blocos 4.1 + 4.2 + 4.3 + 4.4 fechados.** Sub-bloco **4.5 em andamento**: 5 HTTP Tools criadas no workflow apontando pras RPCs, smoke e2e bloqueado por 503 temporário do Gemini no último teste. Próximo foco: repetir smoke e2e + validação manual do prompt (4.6) + ativar workflow (4.7).
+> **Último commit (CRM):** `68d290f docs(dorinda): RETOMADA com estado do dia 2026-05-25`
+> **Status global:** Fase A praticamente completa. **Backend Dorinda funcionando ponta a ponta em produção** (Code Node `Dorinda Brain`, workflow ATIVO, DB Webhook do Supabase disparando o n8n — e2e real validado em 2026-05-25). **Sub-blocos 4.1–4.5 + 4.7 fechados; 4.6 com 9/13 cenários validados + 1 parcial, 3 pendentes só por cota free-tier do Gemini.** **Etapa 5 (chat widget)** feita e deployada no site. **Etapa 6 (catálogo /imoveis)** com MVP pronto. Próximo: trocar key Gemini (Leandro) → fechar 4.6 → ajustar dados de preço do catálogo → launch.
 
 ---
 
@@ -66,9 +66,9 @@ Estado de produto:
 | 1 | Fundação Supabase (schema, RLS, storage) | Concluída |
 | 2 | Cliente Supabase + autenticação | Concluída |
 | 3 | Migração do `mockData` (CRM real) | Concluída (sub-blocos 3.1 a 3.7) |
-| 4 | Backend Dorinda (n8n + OpenAI + webhooks) | **PRÓXIMA** |
-| 5 | Chat widget no site público | Não iniciada |
-| 6 | Catálogo público no site | Não iniciada |
+| 4 | Backend Dorinda (n8n + Gemini + webhooks) | Quase fechada — 4.1–4.5 + 4.7 OK; 4.6 falta 3 cenários (cota Gemini) |
+| 5 | Chat widget no site público | **MVP feito + deployado** (2026-05-25); e2e real OK |
+| 6 | Catálogo público no site | **MVP feito** (`/imoveis`); pendente ajuste de dados + deploy final |
 
 ---
 
@@ -233,8 +233,9 @@ Isolamento entre `CRM_Leandro` e `CRM_FVC`:
 | **Notificações (sino)** | OK | Badge unread, dropdown persistente, auto-criação ao agendar evento |
 | **Popup de notificação** | OK | `NotificationPopup` custom (substitui `toast.info`), beep com `AudioContext` singleton + `resume()` pós-`await` |
 | **Scheduler de lembretes** | OK | `useReminderScheduler` com polling de 30s, respeita `reminder_minutes_before`, dedup via `localStorage` (TTL 7 dias), re-check em `visibilitychange` |
-| **Dorinda (backend)** | Em andamento | Workflow `[LEANDRO] Chat_Widget_AI_v1` no n8n. **Pivô 2026-05-23:** `toolHttpRequest`/`AI Agent` abandonados (3 bugs de runtime do n8n) → **Code Node único (`Dorinda Brain`)** com function-calling manual do Gemini despachando pras 5 RPCs. RPCs aplicadas (migration `0008`, smoke isolado 13/13). **Smoke e2e PASSOU** em 2026-05-23 (execution `34384`, pipeline completo persistindo em `chat_messages`). Falta validação manual dos 13 cenários (4.6) + ativação (4.7). Ver [[project-dorinda-codenode]] |
-| **Catálogo público** | Não iniciado | Etapa 6 |
+| **Dorinda (backend)** | **Em produção** | Workflow `[LEANDRO] Chat_Widget_AI_v1` **ATIVO**. **Code Node `Dorinda Brain`** (pivô 2026-05-23): function-calling manual do Gemini → 5 RPCs. **4.7 (2026-05-25):** data calculada em runtime (`Intl` pt-BR, sem congelar `{{ $now }}`). **e2e real OK** (2026-05-25): widget → Supabase → DB Webhook → n8n → Gemini → resposta persistida. **4.6:** 9/13 cenários OK + 1 parcial; 3 pendentes (`desconto`/`fgts`/`humano`) só por 429 free-tier. Ver [[project-dorinda-codenode]] |
+| **Chat widget (site)** | **MVP deployado** | `ChatWidget.jsx` no repo `07_Leando_Alonso_Site` (Vite/JSX/GSAP). Bolha → painel, insere em `chat_messages` via anon, resposta por polling. Abre vazio (Dorinda se apresenta no prompt). Ver [[project-leandro-site]] |
+| **Catálogo público** | **MVP feito** | Página `/imoveis` (react-router-dom), query anon de `properties` públicas + `media`, cards no design system (obsidian/champagne/GSAP). ⚠️ dados de preço de teste pequenos (550/750) renderizam "R$ 550" — corrigir no CRM antes do launch |
 
 ---
 
@@ -387,8 +388,10 @@ Fonte única de verdade dos parâmetros do workflow. Atualizar aqui ao mudar qua
 | **Host n8n (UI/API)** | `https://n8n.hubautomacao.pro` |
 | **Host de webhooks** | `https://webhook.hubautomacao.pro` |
 | **Webhook de teste** | `https://webhook.hubautomacao.pro/webhook-test/c8590ef1-14e1-4d99-87ab-91521e7b63c2` |
+| **Webhook de produção** | `https://webhook.hubautomacao.pro/webhook/c8590ef1-14e1-4d99-87ab-91521e7b63c2` |
+| **Supabase DB Webhook** | **Criado e verificado** (2026-05-25): INSERT em `chat_messages` → POST no webhook de produção. Envelope `{type, table, record,...}`; nó `Extrair Dados` lê `body.record.*`. Ver [[project-supabase-db-webhook-missing]] |
 | **Nós** | 21 (13 ativos do fluxo + `Dorinda Brain` Code Node; 8 nós antigos do AI Agent **desabilitados**, não deletados) |
-| **Status do workflow** | **Inativo** (ativa só na 4.6/4.7) |
+| **Status do workflow** | **ATIVO** (ativado em 2026-05-25 — e2e real validado; ⚠️ `inject-to-n8n.cjs --apply` desativa, lembrar de reativar) |
 | **Arquitetura da IA** | **Code Node `Dorinda Brain`** (pivô 2026-05-23) — function-calling manual contra Gemini REST, despacha pras 5 RPCs. Substituiu `AI Agent`+`toolHttpRequest`. Ver [[project-dorinda-codenode]] |
 | **Estado funcional** | Smoke e2e **PASSOU** em 2026-05-23 (execution `34384`: webhook → Extrair Dados → Verificar Status → IA ativa? → Pausa → **Dorinda Brain** → Preparar Resposta → INSERT `chat_messages`). Smoke anterior do esqueleto sem tools havia passado em 2026-05-13 |
 | **LLM provider** | Google Gemini (via nó n8n LangChain) |
@@ -414,8 +417,8 @@ Fonte única de verdade dos parâmetros do workflow. Atualizar aqui ao mudar qua
 | 4.3 | Workflow Chat Widget: trocar OpenAI por Gemini, aplicar prompt Dorinda, ajustar `Preparar Resposta` (Mariana → Dorinda), smoke test e2e via webhook | ✅ 2026-05-13 |
 | 4.4 | RPCs Supabase + smoke test isolado (migration `0008_dorinda_rpcs.sql`, 5 RPCs + 5 helpers + sequence + índice; smoke PowerShell 13/13 OK) | ✅ 2026-05-22 |
 | 4.5 | **Pivô para Code Node** (`Dorinda Brain`): `toolHttpRequest`/`AI Agent` abandonados após 3 bugs de runtime do n8n; function-calling manual do Gemini despachando pras 5 RPCs. Código testável em `scripts/dorinda-brain/` (20/20). **Smoke e2e PASSOU** (execution `34384`). Spec/plano em `docs/superpowers/` | ✅ 2026-05-23 |
-| 4.6 | Validação manual do prompt — checklist de 13 cenários em `docs/PROMPT-DORINDA.md` | pendente |
-| 4.7 | Ativar workflow `[LEANDRO] Chat_Widget_AI_v1` em produção, apontar o widget do site para o webhook production | pendente |
+| 4.6 | Validação manual do prompt — checklist de 13 cenários (via `scripts/dorinda-brain/scenario-runner.cjs`) | **9/13 OK + 1 parcial** (2026-05-25); 3 pendentes (`desconto`/`fgts`/`humano`) só por 429 free-tier — re-rodar com key do Leandro |
+| 4.7 | Data em **runtime** no Code Node (sentinel `__DORINDA_NOW__` + `Intl` pt-BR, sem congelar `{{ $now }}`) + regra anti-markdown no prompt + workflow **ATIVADO** + DB Webhook do Supabase criado e verificado | ✅ 2026-05-25 |
 | 4.8 | (opcional, fora da Fase A) Workflow de follow-up automático — sem reaproveitar o `Mariana_FollowUp_Curto`, projetar do zero se entrar em escopo | parking lot |
 | ~~4.9~~ | ~~Workflow WhatsApp~~ — fora de escopo na Fase A (ver seção 7) | ❌ removido |
 
@@ -436,7 +439,8 @@ Aplicado no AI Agent do workflow (`docs/PROMPT-DORINDA.md`). Resumo:
 - Handoff humano em casos definidos (desconto, FGTS, confusão repetida, etc.)
 - Provider efetivo: Google Gemini `models/gemini-2.5-flash` (o cabeçalho do prompt menciona gpt-4o; ignorar — decisão de provider está em [[project-dorinda-llm]])
 - Temperature: 0.3
-- Variável `{{ $now }}` é resolvida pelo n8n (Luxon)
+- **Data/hora (4.7):** o `{{ $now }}` NÃO é mais congelado em build-time — o Code Node calcula a data real em runtime (`Intl.DateTimeFormat` pt-BR / America/Sao_Paulo) via sentinel `__DORINDA_NOW__`
+- **Sem markdown:** regra no prompt (FORMATAÇÃO E TOM) — o chat widget não renderiza markdown, então a Dorinda escreve texto puro
 
 ### Decisões já tomadas (fechamento das antigas perguntas bloqueantes)
 
@@ -473,17 +477,17 @@ Contrato em `docs/04-DORINDA-TOOLS-CONTRACT.md` v0.2. 6 decisões registradas:
 
 ## 10. Etapas 5 e 6 (resumo)
 
-### Etapa 5 — Chat widget no site (1 semana)
-- `<ChatWidget>` no `src/App.jsx` do site
-- Webhook → n8n → Dorinda
-- Persistência em `chat_conversations` + `chat_messages`
-- Notificação no CRM via Supabase Realtime
+### Etapa 5 — Chat widget no site — **MVP FEITO (2026-05-25)**
+- `ChatWidget.jsx` global (montado no router do site `07_Leando_Alonso_Site`), `lib/supabase.js` com client anon + `WORKSPACE_ID`
+- Fluxo: insere `chat_messages` (anon) → **Supabase DB Webhook** → n8n → Dorinda → resposta por **polling** (realtime não habilitado)
+- Guard: sem env Supabase, widget se auto-desativa (não derruba o site). Abre vazio; input bloqueia enquanto aguarda (anti-duplicata)
+- **e2e real validado.** Pendente: key do Leandro (free-tier 429 sob uso). Ver [[project-leandro-site]]
 
-### Etapa 6 — Catálogo público (1 semana)
-- Roteamento no site (React Router ou similar)
-- Páginas `/imoveis` e `/imoveis/:id`
-- Filtros funcionais
-- CTA "Falar com a Dorinda"
+### Etapa 6 — Catálogo público — **MVP FEITO (2026-05-25)**
+- `react-router-dom` (v6) + rota `/imoveis`; `vercel.json` com SPA rewrites; `.npmrc` `legacy-peer-deps` (React 19 RC)
+- `pages/Catalog.jsx`: query anon `properties` (`is_public`, status `disponivel`/`reservado`) + embed `media` (cover), cards no design system + GSAP
+- Verificado no browser (2 imóveis, foto via Storage anon). ⚠️ **dados de teste têm preços pequenos (550/750)** → renderizam "R$ 550" (formatBRL igual ao CRM, sem hack ×1000); corrigir os valores no CRM antes do launch
+- Pendente: página de detalhe `/imoveis/:id`, filtros, CTA "Falar com a Dorinda", push/deploy
 
 ---
 
@@ -617,6 +621,6 @@ Substituídos por este consolidado:
 
 ## Resumo em uma frase
 
-Fase A do CRM Leandro está com **frontend completo e estável** (Etapa 3 + 3.6 + 3.7 fechadas) e **backend da Dorinda em funcionamento ponta a ponta** (sub-blocos 4.1 + 4.2 + 4.3 fechados em 2026-05-13 — webhook → Postgres → Gemini 2.5 Flash → resposta gravada). Próximo passo: **sub-bloco 4.4 — tools do AI Agent** (consultar_imoveis, criar_lead, agendar_visita, notificar_corretor).
+Fase A do CRM Leandro está **praticamente completa**: frontend estável, **Dorinda em produção ponta a ponta** (Code Node `Dorinda Brain` + 5 RPCs, workflow ATIVO, DB Webhook do Supabase disparando o n8n — e2e real validado em 2026-05-25), **chat widget deployado** no site e **catálogo `/imoveis`** com MVP pronto. Faltam só: trocar a key Gemini do Felipe pela do Leandro (free-tier 429 sob uso), fechar os 3 cenários restantes do 4.6, corrigir os valores de preço de teste, e o deploy final do catálogo.
 
-**Próxima atualização:** ao final do sub-bloco 4.4 (tools configuradas no AI Agent) ou após a validação manual do prompt (4.5).
+**Próxima atualização:** após a troca da key do Leandro + fechamento do 4.6 (13/13) + launch público do site.
