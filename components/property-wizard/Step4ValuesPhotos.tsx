@@ -1,6 +1,7 @@
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { CurrencyField } from './CurrencyField';
 import type { PropertyFullInput } from '@/src/lib/schemas/property-schema';
 
 interface Step4ValuesPhotosProps {
@@ -34,14 +35,7 @@ export function Step4ValuesPhotos({ photosSlot }: Step4ValuesPhotosProps) {
             <label htmlFor="prop-sale" className="wizard-step__label">
               Preço de venda (R$)
             </label>
-            <Input
-              id="prop-sale"
-              type="number"
-              step="0.01"
-              placeholder="Ex.: 750000"
-              aria-invalid={errors.sale_price ? 'true' : 'false'}
-              {...register('sale_price')}
-            />
+            <CurrencyField id="prop-sale" name="sale_price" placeholder="Ex.: 750.000" />
             {errors.sale_price && (
               <span className="wizard-step__error">{errors.sale_price.message}</span>
             )}
@@ -53,14 +47,7 @@ export function Step4ValuesPhotos({ photosSlot }: Step4ValuesPhotosProps) {
             <label htmlFor="prop-rent" className="wizard-step__label">
               Aluguel (R$)
             </label>
-            <Input
-              id="prop-rent"
-              type="number"
-              step="0.01"
-              placeholder="Ex.: 3500"
-              aria-invalid={errors.rent_price ? 'true' : 'false'}
-              {...register('rent_price')}
-            />
+            <CurrencyField id="prop-rent" name="rent_price" placeholder="Ex.: 3.500" />
             {errors.rent_price && (
               <span className="wizard-step__error">{errors.rent_price.message}</span>
             )}
@@ -71,24 +58,14 @@ export function Step4ValuesPhotos({ photosSlot }: Step4ValuesPhotosProps) {
           <label htmlFor="prop-condo" className="wizard-step__label">
             Condomínio (R$)
           </label>
-          <Input
-            id="prop-condo"
-            type="number"
-            step="0.01"
-            {...register('condo_fee')}
-          />
+          <CurrencyField id="prop-condo" name="condo_fee" placeholder="Ex.: 850" />
         </div>
 
         <div className="wizard-step__field">
           <label htmlFor="prop-iptu" className="wizard-step__label">
             IPTU (R$)
           </label>
-          <Input
-            id="prop-iptu"
-            type="number"
-            step="0.01"
-            {...register('iptu')}
-          />
+          <CurrencyField id="prop-iptu" name="iptu" placeholder="Ex.: 320" />
         </div>
       </div>
 
@@ -98,13 +75,7 @@ export function Step4ValuesPhotos({ photosSlot }: Step4ValuesPhotosProps) {
             <label htmlFor="prop-monthly" className="wizard-step__label">
               Total mensal (R$)
             </label>
-            <Input
-              id="prop-monthly"
-              type="number"
-              step="0.01"
-              placeholder="Aluguel + condomínio + IPTU"
-              {...register('total_monthly')}
-            />
+            <CurrencyField id="prop-monthly" name="total_monthly" placeholder="Aluguel + condomínio + IPTU" />
           </div>
 
           <div className="wizard-step__field">
