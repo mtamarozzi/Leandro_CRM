@@ -5,6 +5,32 @@
 
 ---
 
+## 🚩 SESSÃO 2026-05-26 — Polish do site + bug do wizard corrigido. 4.6 BLOQUEADO por key sem billing
+
+Meta do dia era fechar o 4.6 e fazer o teste real. **4.6 não fechou** (sem key com billing); foco virou polish de apresentação. Tudo commitado e pushed (deploys Vercel disparados).
+
+### ✅ Feito hoje (2026-05-26)
+- **Bug do wizard `sale_price` CORRIGIDO (CRM):** `<input type="number">` salvava `420` em vez de `420000` (formato BR `420.000` → ponto vira decimal). Novo `components/property-wizard/CurrencyField.tsx` (máscara BR via Controller, conta só dígitos, guarda inteiro em reais) nos 5 campos monetários do Step4. `vite build` passa. Commit `08b0e38` na `feat/backend-fase-a` (pushed).
+- **Dados corrigidos no banco:** `LDR-2026-0003` (Boqueirão) `sale_price=420000` + `condo_fee=1100`. Auditoria dos 4 imóveis: **nenhum outro valor suspeito**.
+- **Site — cards ofuscados CORRIGIDOS:** `gsap.from('.cat-card',{opacity:0})` + React StrictMode deixava cards travados em opacidade intermediária (`1/0.307/0/0`). Trocado por `gsap.fromTo` com destino explícito + `clearProps` (Catalog + PropertyDetail). Verificado ao vivo: `1/1/1/1`. + **skeleton de loading** no catálogo. Commit `0075b22` na `main` (pushed).
+- **Site — galeria + responsividade:** setas prev/next na imagem principal do detalhe (sempre visíveis no mobile, hover no desktop, champagne/ivory semi-transparente) + contador N/total; título responsivo (`text-3xl sm:text-4xl`); painel do widget com altura limitada ao viewport (`min(520px,100dvh-7rem)`). Testado em 390×844 e 1280×800. Commit `dcf4161` na `main` (pushed).
+- **CRM admin:** segue deployado em `leandro-crm.vercel.app` (login OK).
+
+### 🔴 4.6 BLOQUEADO — Dorinda NÃO testada
+- Re-run de `desconto,fgts,humano` em 2026-05-26 **bateu 429 de novo** (cota free-tier do Felipe; reset diário não resolveu). Handoff mecânico via `FALLBACK: gemini_indisponivel:429`, **não** decisão do LLM → não contam.
+- **O Leandro ainda NÃO tem Gemini key com billing.** Os 3 cenários ficam pendentes até ter a key. **NÃO re-rodar nem fechar 4.6 até lá.** Cleanup também PENDENTE (run de hoje criou notifications de fallback `eed207cc`, `5a1bb80f`, `64ae86a3`). Ver `project_4_6_blocked_no_billing_key.md`.
+- 4.6 segue **9/13 limpos + 1 parcial (`pergunta_direta`) + 3 pendentes.**
+
+### 🔜 Quando tiver a key do Leandro (billing)
+1. Trocar `GEMINI_API_KEY` no `.env.local` → `node scripts/dorinda-brain/build-n8n-code.cjs` → `node scripts/dorinda-brain/inject-to-n8n.cjs --apply` → **reativar** workflow `Db1qI76NKGnJB3x6` (o inject desativa no fim).
+2. `node scripts/dorinda-brain/scenario-runner.cjs desconto,fgts,humano 8000` — sem `FALLBACK` → 13/13 fecha 4.6.
+3. Cleanup: `node scripts/dorinda-brain/cleanup-test-data.cjs --apply`.
+
+### ⚠️ Pendência técnica conhecida (fora do escopo de hoje)
+- `07_Leando_Alonso_Site/src/App.jsx` tem 4 `gsap.from` (linhas ~372/568/613/699) com o mesmo padrão de risco do bug de StrictMode. Aplicar o mesmo fix `fromTo` quando der. Ver memória `feedback_gsap_from_strictmode_bug.md`.
+
+---
+
 ## 🚩 SESSÃO 2026-05-25 — Fase A NO AR (Dorinda e2e + site catálogo/widget + CRM deployado). Amanhã: fechar 4.6 + teste real
 
 Meta: projeto viável pro **teste real do Leandro com cliente em 2026-05-26 (terça)**.
